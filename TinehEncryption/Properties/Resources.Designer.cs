@@ -63,9 +63,29 @@ namespace TinehEncryption.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap _1431373618_34_16 {
+        internal static System.Drawing.Bitmap black_eye16 {
             get {
-                object obj = ResourceManager.GetObject("1431373618_34-16", resourceCulture);
+                object obj = ResourceManager.GetObject("black_eye16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap grey_eye16 {
+            get {
+                object obj = ResourceManager.GetObject("grey_eye16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap white_eye16 {
+            get {
+                object obj = ResourceManager.GetObject("white_eye16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
