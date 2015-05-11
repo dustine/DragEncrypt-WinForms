@@ -1,4 +1,4 @@
-﻿namespace TinehEncryption
+﻿namespace DragEncrypt
 {
     partial class MainProcess
     {
@@ -115,7 +115,7 @@
             this.showPasswordToggleButton.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.showPasswordToggleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.showPasswordToggleButton.ForeColor = System.Drawing.SystemColors.Control;
-            this.showPasswordToggleButton.Image = global::TinehEncryption.Properties.Resources.white_eye16;
+            this.showPasswordToggleButton.Image = global::DragEncrypt.Properties.Resources.white_eye16;
             this.showPasswordToggleButton.Location = new System.Drawing.Point(266, 3);
             this.showPasswordToggleButton.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
             this.showPasswordToggleButton.Name = "showPasswordToggleButton";

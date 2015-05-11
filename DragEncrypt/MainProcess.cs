@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinehEncryption
+namespace DragEncrypt
 {
     public partial class MainProcess : Form
     {

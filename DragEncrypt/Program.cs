@@ -7,7 +7,7 @@ using System.Security.AccessControl;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinehEncryption
+namespace DragEncrypt
 {
     static class Program
     {
