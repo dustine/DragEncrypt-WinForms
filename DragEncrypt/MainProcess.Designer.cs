@@ -127,7 +127,6 @@
             this.insertButton.TabIndex = 2;
             this.insertButton.Text = "Do";
             this.insertButton.UseVisualStyleBackColor = true;
-            this.insertButton.Click += new System.EventHandler(this.insertButton_Click);
             // 
             // MainProcess
             // 
