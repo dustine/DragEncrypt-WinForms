@@ -80,5 +80,20 @@ namespace DragEncrypt
         {
             Console.Beep();
         }
+
+        private void showPasswordHoldButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            showPasswordHoldButton.BackColor = SystemColors.WindowText;
+            showPasswordHoldButton.Image = Properties.Resources.white_eye16;
+            passwordBox.UseSystemPasswordChar = false;
+            progressBar.ForeColor = SystemColors.WindowText;
+        }
+
+        private void showPasswordHoldButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            showPasswordHoldButton.BackColor = SystemColors.Control;
+            showPasswordHoldButton.Image = Properties.Resources.black_eye16;
+            passwordBox.UseSystemPasswordChar = true;
+        }
     }
 }

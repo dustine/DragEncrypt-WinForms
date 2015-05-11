@@ -30,10 +30,10 @@
         {
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.showPasswordHoldButton = new System.Windows.Forms.Button();
             this.passwordBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.insertButton = new System.Windows.Forms.Button();
-            this.showPasswordToggleButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -55,11 +55,11 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 209F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 76F));
-            this.tableLayoutPanel1.Controls.Add(this.showPasswordToggleButton, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.passwordBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.showPasswordHoldButton, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.progressBar, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.insertButton, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.passwordBox, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -70,15 +70,36 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(367, 65);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
+            // showPasswordHoldButton
+            // 
+            this.showPasswordHoldButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.showPasswordHoldButton.BackColor = System.Drawing.SystemColors.Control;
+            this.showPasswordHoldButton.FlatAppearance.BorderSize = 0;
+            this.showPasswordHoldButton.FlatAppearance.MouseDownBackColor = System.Drawing.SystemColors.WindowText;
+            this.showPasswordHoldButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.showPasswordHoldButton.ForeColor = System.Drawing.SystemColors.Control;
+            this.showPasswordHoldButton.Image = global::DragEncrypt.Properties.Resources.black_eye16;
+            this.showPasswordHoldButton.Location = new System.Drawing.Point(266, 3);
+            this.showPasswordHoldButton.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
+            this.showPasswordHoldButton.Name = "showPasswordHoldButton";
+            this.showPasswordHoldButton.Size = new System.Drawing.Size(25, 26);
+            this.showPasswordHoldButton.TabIndex = 1;
+            this.showPasswordHoldButton.TabStop = false;
+            this.showPasswordHoldButton.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
+            this.showPasswordHoldButton.UseVisualStyleBackColor = false;
+            this.showPasswordHoldButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.showPasswordHoldButton_MouseDown);
+            this.showPasswordHoldButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.showPasswordHoldButton_MouseUp);
+            // 
             // passwordBox
             // 
             this.passwordBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.passwordBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.passwordBox.Location = new System.Drawing.Point(57, 3);
-            this.passwordBox.Margin = new System.Windows.Forms.Padding(1, 3, 3, 3);
+            this.passwordBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.passwordBox.Location = new System.Drawing.Point(57, 6);
+            this.passwordBox.Margin = new System.Windows.Forms.Padding(1, 6, 3, 3);
             this.passwordBox.Name = "passwordBox";
-            this.passwordBox.Size = new System.Drawing.Size(205, 26);
+            this.passwordBox.Size = new System.Drawing.Size(205, 20);
             this.passwordBox.TabIndex = 0;
             this.passwordBox.UseSystemPasswordChar = true;
             // 
@@ -108,23 +129,6 @@
             this.insertButton.UseVisualStyleBackColor = true;
             this.insertButton.Click += new System.EventHandler(this.insertButton_Click);
             // 
-            // showPasswordToggleButton
-            // 
-            this.showPasswordToggleButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.showPasswordToggleButton.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.showPasswordToggleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.showPasswordToggleButton.ForeColor = System.Drawing.SystemColors.Control;
-            this.showPasswordToggleButton.Image = global::DragEncrypt.Properties.Resources.white_eye16;
-            this.showPasswordToggleButton.Location = new System.Drawing.Point(266, 3);
-            this.showPasswordToggleButton.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
-            this.showPasswordToggleButton.Name = "showPasswordToggleButton";
-            this.showPasswordToggleButton.Size = new System.Drawing.Size(25, 26);
-            this.showPasswordToggleButton.TabIndex = 1;
-            this.showPasswordToggleButton.TabStop = false;
-            this.showPasswordToggleButton.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
-            this.showPasswordToggleButton.UseVisualStyleBackColor = false;
-            // 
             // MainProcess
             // 
             this.AcceptButton = this.insertButton;
@@ -138,7 +142,7 @@
             this.MinimumSize = new System.Drawing.Size(383, 104);
             this.Name = "MainProcess";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "TinehEncrypt";
+            this.Text = "DragEncrypt";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -151,7 +155,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button insertButton;
-        private System.Windows.Forms.Button showPasswordToggleButton;
+        private System.Windows.Forms.Button showPasswordHoldButton;
         private System.Windows.Forms.TextBox passwordBox;
     }
 }
