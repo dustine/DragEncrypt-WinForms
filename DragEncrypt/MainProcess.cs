@@ -74,23 +74,23 @@ namespace DragEncrypt
                 var newFileInfo = new FileInfo(encryptedFileInfo.FullName.Substring(0, 
                     encryptedFileInfo.FullName.Length-Settings.Default.Extension.Length));
                 using (var tempFiles = new TempFileCollection())
-                using (var crypter = new AesManaged())
+                
                 {
                     var zippedFileLocation = tempFiles.AddExtension("encrypt.tmp");
                     
-
                     // decrypt to temporary gzipped file
                     using(var encryptedFileStream = encryptedFileInfo.OpenRead())
+                    using (var crypter = new AesManaged())
                     using (
                         var cs = new CryptoStream(encryptedFileStream, crypter.CreateDecryptor(),
                             CryptoStreamMode.Read))
                     using (var zippedFileStream = new FileStream(zippedFileLocation, FileMode.Create))
                     {
-                        // move encrypted stream position after the header
-                        encryptedFileStream.Position = encryptSize;
                         // load parameters
                         Array.Copy(hashedKey, crypter.Key, hashedKey.Length);
-                        crypter.IV = encryptInfo.Iv;
+                        Array.Copy(encryptInfo.Iv, crypter.IV, encryptInfo.Iv.Length);
+                        // move encrypted stream position after the header
+                        encryptedFileStream.Position = encryptSize;
                         cs.CopyTo(zippedFileStream);
                     }
 
@@ -99,31 +99,6 @@ namespace DragEncrypt
                     using (var zipper = new GZipStream(newFileStream, CompressionMode.Decompress))
                     {
                         zipper.CopyTo(newFileStream);
-                    }
-
-                    //Debug.Assert(crypter.ValidKeySize(256));
-
-                    // zip original file
-
-                    using (var newFileTextStream = newFileInfo.CreateText())
-                    {
-                        var zipTask = originalFileStream.CopyToAsync(zipper);
-                        // save encrypted file header
-                        crypter.GenerateIV();
-                        var info = new EncryptInfo(await hashTask, crypter.IV);
-                        newFileTextStream.Write(JsonConvert.SerializeObject(info));
-                        await zipTask;
-                    }
-                    //MessageBox.Show(newFileInfo.Length.ToString
-                    progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
-
-                    using (var zippedResultFileStream = File.OpenRead(zippedFileLocation))
-                    using (
-                        var cs = new CryptoStream(zippedResultFileStream, crypter.CreateEncryptor(),
-                            CryptoStreamMode.Read))
-                    using (var newFileStream = newFileInfo.Open(FileMode.Append, FileAccess.Write))
-                    {
-                        cs.CopyTo(newFileStream);
                     }
                 }
             }
@@ -137,18 +112,14 @@ namespace DragEncrypt
         /// Encrypts the given file, using the private hashed key 
         /// </summary>
         /// <param name="originalFileInfo"></param>
-        private async void EncryptFile(FileInfo originalFileInfo)
+        private void EncryptFile(FileInfo originalFileInfo)
         {
             try
             {
-                var hashTask = Task<String>.Factory.StartNew(() =>
-                {
-                    var result = Hash(originalFileInfo);
-                    progressBar.BeginInvoke(new Action(() => { progressBar.Increment(10); }));
-                    return result;
-                });
-
+                // hash original file
+                var hash = Hash(originalFileInfo);
                 var newFileInfo = new FileInfo(originalFileInfo.FullName + Settings.Default.Extension);
+
                 using (var tempFiles = new TempFileCollection())
                 using (var crypter = new AesManaged())
                 {
@@ -160,18 +131,20 @@ namespace DragEncrypt
                     using (var zippedFileStream = new FileStream(zippedFileLocation, FileMode.Create))
                     using (var zipper = new GZipStream(zippedFileStream, CompressionMode.Compress))
                     using (var originalFileStream = originalFileInfo.OpenRead())
+                    {
+                        originalFileStream.CopyTo(zipper);
+                        // save encrypted file header
+                    }
+
+                    // add header to encrypted file with text stream
                     using (var newFileTextStream = newFileInfo.CreateText())
                     {
-                        var zipTask = originalFileStream.CopyToAsync(zipper);
-                        // save encrypted file header
                         crypter.GenerateIV();
-                        var info = new EncryptInfo(await hashTask, crypter.IV);
+                        var info = new EncryptInfo(hash, crypter.IV);
                         newFileTextStream.Write(JsonConvert.SerializeObject(info));
-                        await zipTask;
                     }
-                    //MessageBox.Show(newFileInfo.Length.ToString
-                    progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
-
+                    //progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
+                    // encrypt zipped file into encrypted (final) file
                     using (var zippedResultFileStream = File.OpenRead(zippedFileLocation))
                     using (var cs = new CryptoStream(zippedResultFileStream, crypter.CreateEncryptor(), CryptoStreamMode.Read))
                     using (var newFileStream = newFileInfo.Open(FileMode.Append,FileAccess.Write))
