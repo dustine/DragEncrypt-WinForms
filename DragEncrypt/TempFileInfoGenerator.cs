@@ -1,17 +1,12 @@
 ﻿using System;
 using System.CodeDom.Compiler;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragEncrypt
 {
     public class TempFileInfoGenerator : IDisposable
     {
-        private int _count = 0;
+        private int _count;
         private readonly TempFileCollection _collection;
         public string Extension { get; private set; }
 

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +15,7 @@ namespace DragEncrypt
 {
     public partial class MainProcess : Form
     {
-        private byte[] hashedKey;
+        private byte[] _hashedKey;
 
         public MainProcess(string fileLocation)
         {
@@ -26,13 +24,13 @@ namespace DragEncrypt
             var fi = new FileInfo(fileLocation);
             if (IsEncrypted(fi))
             {
-                insertButton.Text = "Decrypt";
+                insertButton.Text = Resources.MainProcess_MainProcess_Decrypt;
                 insertButton.Click +=
                     (o, ea) => { Task.Factory.StartNew(() => DecryptFile(fi)); };
             }
             else
             {
-                insertButton.Text = "Encrypt";
+                insertButton.Text = Resources.MainProcess_MainProcess_Encrypt;
                 insertButton.Click +=
                     (o, ea) => { Task.Factory.StartNew(() => EncryptFile(fi)); };
             }
@@ -63,16 +61,16 @@ namespace DragEncrypt
             try
             {
                 EncryptInfo encryptInfo;
-                Encoding headerEncoding;
+                //Encoding headerEncoding;
                 using (var encryptedFileStream = encryptedFileInfo.OpenText())
                 {
                     var js = new JsonSerializer {CheckAdditionalContent = false };
                     encryptInfo = (EncryptInfo) js.Deserialize(encryptedFileStream, typeof (EncryptInfo));
-                    headerEncoding = encryptedFileStream.CurrentEncoding;
+                    //headerEncoding = encryptedFileStream.CurrentEncoding;
                 }
                 // TODO: Find a less hackish way to find the char where to start the decrypt stream
-                var encryptSize = headerEncoding.GetByteCount(JsonConvert.SerializeObject(encryptInfo));
-                var actualEncryptSize = encryptedFileInfo.Length - encryptInfo.EncryptedLength;
+                //var encryptSize = headerEncoding.GetByteCount(JsonConvert.SerializeObject(encryptInfo));
+                var encryptSize = encryptedFileInfo.Length - encryptInfo.EncryptedLength;
 
                 var newFileInfo = new FileInfo(encryptedFileInfo.FullName.Substring(0, 
                     encryptedFileInfo.FullName.Length-Settings.Default.Extension.Length));
@@ -93,7 +91,7 @@ namespace DragEncrypt
                     using (var crypter = new AesManaged())
                     {
                         // load parameters
-                        crypter.Key = hashedKey;
+                        crypter.Key = _hashedKey;
                         crypter.IV = encryptInfo.Iv;
 
                         using (
@@ -144,7 +142,7 @@ namespace DragEncrypt
                 using (var crypter = new AesManaged())
                 {
                     var zippedFileInfo = tempFiles.CreateFile();
-                    crypter.Key = hashedKey;
+                    crypter.Key = _hashedKey;
                     crypter.GenerateIV();
 
                     //Debug.Assert(crypter.ValidKeySize(256));
@@ -216,19 +214,16 @@ namespace DragEncrypt
         /// <param name="e"></param>
         private void insertButton_Click(object sender, EventArgs e)
         {
-            
+            // hash password
             using (var hasher = new SHA256Managed())
             {
-                hashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
+                _hashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
                 passwordBox.Text = null;
             }
 
             passwordBox.Enabled = false;
             showPasswordHoldButton.Enabled = false;
             insertButton.Enabled = false;
-
-            // hash password
-            
         }
 
         private void showPasswordHoldButton_MouseDown(object sender, MouseEventArgs e)
@@ -246,6 +241,8 @@ namespace DragEncrypt
             passwordBox.UseSystemPasswordChar = true;
         }
 
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
         private class EncryptInfo
         {
             public long EncryptedLength { get; private set; }
@@ -259,6 +256,7 @@ namespace DragEncrypt
             public byte[] Iv { get; private set; }
 
             [JsonConstructor]
+            // ReSharper disable once UnusedMember.Local
             private EncryptInfo(long encryptedLength, string hash, string version, Dictionary<string, string> methods, byte[] iv)
             {
                 EncryptedLength = encryptedLength;

@@ -1,11 +1,14 @@
-﻿namespace DragEncrypt
+﻿using System.ComponentModel;
+using System.Windows.Forms;
+
+namespace DragEncrypt
 {
     partial class MainProcess
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -150,11 +153,11 @@
 
         #endregion
 
-        private System.Windows.Forms.ProgressBar progressBar;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button insertButton;
-        private System.Windows.Forms.Button showPasswordHoldButton;
-        private System.Windows.Forms.TextBox passwordBox;
+        private ProgressBar progressBar;
+        private TableLayoutPanel tableLayoutPanel1;
+        private Label label1;
+        private Button insertButton;
+        private Button showPasswordHoldButton;
+        private TextBox passwordBox;
     }
 }

@@ -81,6 +81,24 @@ namespace DragEncrypt.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Decrypt.
+        /// </summary>
+        internal static string MainProcess_MainProcess_Decrypt {
+            get {
+                return ResourceManager.GetString("MainProcess_MainProcess_Decrypt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encrypt.
+        /// </summary>
+        internal static string MainProcess_MainProcess_Encrypt {
+            get {
+                return ResourceManager.GetString("MainProcess_MainProcess_Encrypt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap white_eye16 {
