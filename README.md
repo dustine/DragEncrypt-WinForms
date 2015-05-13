@@ -9,7 +9,7 @@ A window will appear where the user can insert the desired password, with a hold
 Decryption is done with the same method as encrypting, just requiring the encrypted file to be the chosen target.
 
 ##Safety concerts
-The program takes no extra security precautions during its run, beyond trying to delete the unecrypted password 'quickly', so the process is rather vulnerable to attacks before and during encryption, likewise for decryption. However the created encrypted file *should* be mostly safe from brute-force attacks or re-engineering, or at least [as safe](https://howsecureismypassword.net) as the chosen password. Still, the authors of this software, as 
+The program takes no extra security precautions during its run, beyond trying to delete the unecrypted password 'quickly', so the process is rather vulnerable to attacks before and during encryption, likewise for decryption. However the created encrypted file *should* be mostly safe from brute-force attacks or re-engineering, or at least [as safe](https://howsecureismypassword.net) as the chosen password. 
 
 ##To-do
 - [ ] Option to delete the original unencrypted file 
