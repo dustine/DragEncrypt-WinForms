@@ -73,6 +73,7 @@
       <DependentUpon>MainProcess.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TempFileInfoGenerator.cs" />
     <EmbeddedResource Include="MainProcess.resx">
       <DependentUpon>MainProcess.cs</DependentUpon>
     </EmbeddedResource>

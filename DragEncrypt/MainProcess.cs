@@ -63,44 +63,64 @@ namespace DragEncrypt
             try
             {
                 EncryptInfo encryptInfo;
+                Encoding headerEncoding;
                 using (var encryptedFileStream = encryptedFileInfo.OpenText())
                 {
                     var js = new JsonSerializer {CheckAdditionalContent = false };
                     encryptInfo = (EncryptInfo) js.Deserialize(encryptedFileStream, typeof (EncryptInfo));
+                    headerEncoding = encryptedFileStream.CurrentEncoding;
                 }
                 // TODO: Find a less hackish way to find the char where to start the decrypt stream
-                var encryptSize = JsonConvert.SerializeObject(encryptInfo).ToCharArray().Length;
+                var encryptSize = headerEncoding.GetByteCount(JsonConvert.SerializeObject(encryptInfo));
+                var actualEncryptSize = encryptedFileInfo.Length - encryptInfo.EncryptedLength;
 
                 var newFileInfo = new FileInfo(encryptedFileInfo.FullName.Substring(0, 
                     encryptedFileInfo.FullName.Length-Settings.Default.Extension.Length));
-                using (var tempFiles = new TempFileCollection())
-                
+                using (var tempFiles = new TempFileInfoGenerator())
                 {
-                    var zippedFileLocation = tempFiles.AddExtension("encrypt.tmp");
-                    
-                    // decrypt to temporary gzipped file
-                    using(var encryptedFileStream = encryptedFileInfo.OpenRead())
-                    using (var crypter = new AesManaged())
-                    using (
-                        var cs = new CryptoStream(encryptedFileStream, crypter.CreateDecryptor(),
-                            CryptoStreamMode.Read))
-                    using (var zippedFileStream = new FileStream(zippedFileLocation, FileMode.Create))
+                    var onlyEncryptedFileInfo = tempFiles.CreateFile();
+                    var zippedFileInfo = tempFiles.CreateFile();
+                    using (var onlyEncryptedFileStream = onlyEncryptedFileInfo.OpenWrite())
+                    using (var encryptedFileStream = encryptedFileInfo.OpenRead())
                     {
-                        // load parameters
-                        Array.Copy(hashedKey, crypter.Key, hashedKey.Length);
-                        Array.Copy(encryptInfo.Iv, crypter.IV, encryptInfo.Iv.Length);
-                        // move encrypted stream position after the header
-                        encryptedFileStream.Position = encryptSize;
-                        cs.CopyTo(zippedFileStream);
+                        encryptedFileStream.Seek(encryptSize, SeekOrigin.Begin);
+                        encryptedFileStream.CopyTo(onlyEncryptedFileStream);
                     }
 
+                    // decrypt to temporary gzipped file
+                    //using (var onlyEncryptedFileStream = newFileInfo())
+                    using (var onlyEncryptedFileStream = onlyEncryptedFileInfo.OpenRead())
+                    using (var crypter = new AesManaged())
+                    {
+                        // load parameters
+                        crypter.Key = hashedKey;
+                        crypter.IV = encryptInfo.Iv;
+
+                        using (
+                        var cs = new CryptoStream(onlyEncryptedFileStream, crypter.CreateDecryptor(),
+                            CryptoStreamMode.Read))
+                        using (var zippedFileStream = zippedFileInfo.OpenWrite())
+                        {
+                            // encryptedFileStream.Seek(encryptSize, SeekOrigin.Begin);
+                            // move encrypted stream position after the header
+                            cs.CopyTo(zippedFileStream);
+                        }
+                    }
+                    
                     // unzip from the temporary file into the final permanent file
+                    using (var zippedFileStream = zippedFileInfo.OpenRead())
                     using (var newFileStream = newFileInfo.Open(FileMode.Create, FileAccess.Write))
-                    using (var zipper = new GZipStream(newFileStream, CompressionMode.Decompress))
+                    using (var zipper = new GZipStream(zippedFileStream, CompressionMode.Decompress))
                     {
                         zipper.CopyTo(newFileStream);
                     }
                 }
+
+                // check the hash of the final product
+                var newHash = Hash(newFileInfo);
+                if (newHash.Equals(encryptInfo.Hash, StringComparison.CurrentCultureIgnoreCase))
+                    return;
+                throw new CryptographicException("Result hash does not match initial hash");
             }
             catch (Exception e)
             {
@@ -120,15 +140,17 @@ namespace DragEncrypt
                 var hash = Hash(originalFileInfo);
                 var newFileInfo = new FileInfo(originalFileInfo.FullName + Settings.Default.Extension);
 
-                using (var tempFiles = new TempFileCollection())
+                using (var tempFiles = new TempFileInfoGenerator())
                 using (var crypter = new AesManaged())
                 {
-                    var zippedFileLocation = tempFiles.AddExtension("encrypt.tmp");
-                    Array.Copy(hashedKey, crypter.Key, hashedKey.Length);
+                    var zippedFileInfo = tempFiles.CreateFile();
+                    crypter.Key = hashedKey;
+                    crypter.GenerateIV();
+
                     //Debug.Assert(crypter.ValidKeySize(256));
 
                     // zip original file
-                    using (var zippedFileStream = new FileStream(zippedFileLocation, FileMode.Create))
+                    using (var zippedFileStream = zippedFileInfo.OpenWrite())
                     using (var zipper = new GZipStream(zippedFileStream, CompressionMode.Compress))
                     using (var originalFileStream = originalFileInfo.OpenRead())
                     {
@@ -136,20 +158,30 @@ namespace DragEncrypt
                         // save encrypted file header
                     }
 
+                    //progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
+                    // encrypt zipped file into encrypted (final) file
+                    var encryptedFileInfo = tempFiles.CreateFile();
+                    using (var zippedResultFileStream = zippedFileInfo.OpenRead())
+                    using (var cs = new CryptoStream(zippedResultFileStream, crypter.CreateEncryptor(), CryptoStreamMode.Read))
+                    using (var encryptedStream = encryptedFileInfo.OpenWrite())
+                    {
+                        cs.CopyTo(encryptedStream);
+                    }
+
+                    var encryptedSize = encryptedFileInfo.Length;
                     // add header to encrypted file with text stream
                     using (var newFileTextStream = newFileInfo.CreateText())
                     {
-                        crypter.GenerateIV();
-                        var info = new EncryptInfo(hash, crypter.IV);
+                        var info = new EncryptInfo(encryptedSize, hash, crypter.IV);
                         newFileTextStream.Write(JsonConvert.SerializeObject(info));
+                        //newFileTextStream.Flush();
                     }
-                    //progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
-                    // encrypt zipped file into encrypted (final) file
-                    using (var zippedResultFileStream = File.OpenRead(zippedFileLocation))
-                    using (var cs = new CryptoStream(zippedResultFileStream, crypter.CreateEncryptor(), CryptoStreamMode.Read))
-                    using (var newFileStream = newFileInfo.Open(FileMode.Append,FileAccess.Write))
+
+                    // join the two files
+                    using (var encryptedStream = encryptedFileInfo.OpenRead())
+                    using (var newFileStream = newFileInfo.Open(FileMode.Append, FileAccess.Write))
                     {
-                        cs.CopyTo(newFileStream);
+                        encryptedStream.CopyTo(newFileStream);
                     }
                 }
             }
@@ -184,16 +216,19 @@ namespace DragEncrypt
         /// <param name="e"></param>
         private void insertButton_Click(object sender, EventArgs e)
         {
-            passwordBox.Enabled = false;
-            showPasswordHoldButton.Enabled = false;
-            insertButton.Enabled = false;
-
-            // hash password
+            
             using (var hasher = new SHA256Managed())
             {
                 hashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
                 passwordBox.Text = null;
             }
+
+            passwordBox.Enabled = false;
+            showPasswordHoldButton.Enabled = false;
+            insertButton.Enabled = false;
+
+            // hash password
+            
         }
 
         private void showPasswordHoldButton_MouseDown(object sender, MouseEventArgs e)
@@ -213,6 +248,8 @@ namespace DragEncrypt
 
         private class EncryptInfo
         {
+            public long EncryptedLength { get; private set; }
+
             public string Hash { get; private set; }
 
             public string Version { get; private set; }
@@ -222,15 +259,17 @@ namespace DragEncrypt
             public byte[] Iv { get; private set; }
 
             [JsonConstructor]
-            private EncryptInfo(string hash, string version, Dictionary<string, string> methods, byte[] iv)
+            private EncryptInfo(long encryptedLength, string hash, string version, Dictionary<string, string> methods, byte[] iv)
             {
+                EncryptedLength = encryptedLength;
                 Hash = hash;
                 Version = version;
                 Methods = methods;
                 Iv = iv;
             }
-            public EncryptInfo(string hash, byte[] iv)
+            public EncryptInfo(long encryptedLength, string hash, byte[] iv)
             {
+                EncryptedLength = encryptedLength;
                 Version = Application.ProductVersion;
                 Methods = new Dictionary<string, string> {{"Hash", "SHA256"}, {"Encryption", "AES CBC"}};
                 Iv = iv;
