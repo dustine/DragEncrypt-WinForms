@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using DragEncrypt.Properties;
 
 namespace DragEncrypt
 {
@@ -18,7 +19,12 @@ namespace DragEncrypt
             string fileLocation;
             if (args == null || args.Length <= 0)
             {
-                var openFile = new OpenFileDialog {Multiselect = false, CheckFileExists = true};
+                var openFile = new OpenFileDialog
+                {
+                    Multiselect = false, 
+                    CheckFileExists = true, 
+                    Title = Resources.Program_Main_Select_Target_File
+                };
                 openFile.ShowDialog();
                 fileLocation = openFile.FileName;
             }

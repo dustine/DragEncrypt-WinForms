@@ -73,9 +73,9 @@ namespace DragEncrypt.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap grey_eye16 {
+        internal static System.Drawing.Bitmap folder_16 {
             get {
-                object obj = ResourceManager.GetObject("grey_eye16", resourceCulture);
+                object obj = ResourceManager.GetObject("folder_16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -95,6 +95,15 @@ namespace DragEncrypt.Properties {
         internal static string MainProcess_MainProcess_Encrypt {
             get {
                 return ResourceManager.GetString("MainProcess_MainProcess_Encrypt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Target File.
+        /// </summary>
+        internal static string Program_Main_Select_Target_File {
+            get {
+                return ResourceManager.GetString("Program_Main_Select_Target_File", resourceCulture);
             }
         }
         

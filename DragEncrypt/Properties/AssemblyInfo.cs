@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DragEncrypt")]
 [assembly: AssemblyDescription("Quickly encrypts and decrypts files with a chosen password.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("D")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DragEncrypt")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
