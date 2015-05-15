@@ -16,31 +16,74 @@ namespace DragEncrypt
 {
     public partial class MainProcess : Form
     {
-        private readonly FileCryptographer _fileCryptographer;
+        private readonly FileCryptographer _fileCryptographer = new FileCryptographer();
+        private FileInfo _encryptedFileInfo;
+
+        private FileInfo EncryptedFileInfo
+        {
+            get { return _encryptedFileInfo; }
+            set
+            {
+                _encryptedFileInfo = value;
+                if (_encryptedFileInfo == null)
+                {
+                    submitButton.Enabled = false;
+                    filePathLabel.Text = "";
+                }
+                else
+                {
+                    submitButton.Enabled = true;
+                    filePathLabel.Text = _encryptedFileInfo.FullName;
+                    ChangeSubmitButtonText();
+                }
+            }
+        }
+
+        private void ChangeSubmitButtonText()
+        {
+            submitButton.Text = FileCryptographer.IsEncrypted(EncryptedFileInfo) ? Resources.MainProcess_MainProcess_Decrypt : Resources.MainProcess_MainProcess_Encrypt;
+        }
 
         public MainProcess(string fileLocation)
         {
             InitializeComponent();
-            submitButton.Click += insertButton_Click;
-            var fi = new FileInfo(fileLocation);
-            _fileCryptographer = new FileCryptographer();
-            if (DragEncrypt.FileCryptographer.IsEncrypted(fi))
+            if (String.IsNullOrWhiteSpace(fileLocation))
             {
-                submitButton.Text = Resources.MainProcess_MainProcess_Decrypt;
-                submitButton.Click +=
-                    (o, ea) => { Task.Factory.StartNew(() => FileCryptographer.DecryptFile(fi)); };
-            }
-            else
-            {
-                submitButton.Text = Resources.MainProcess_MainProcess_Encrypt;
-                submitButton.Click +=
-                    (o, ea) => { Task.Factory.StartNew(() => FileCryptographer.EncryptFile(fi)); };
+                EncryptedFileInfo = PickTargetFile();
             }
         }
-
-        public FileCryptographer FileCryptographer
+        private static FileInfo PickTargetFile()
         {
-            get { return _fileCryptographer; }
+            string fileLocation;
+            using (var openFile = new OpenFileDialog()
+            {
+                Multiselect = false,
+                CheckPathExists = true,
+                CheckFileExists = true,
+                Title = Resources.Program_Main_Select_Target_File
+            })
+            {
+                openFile.ShowDialog();
+                fileLocation = openFile.FileName;
+            }
+            return String.IsNullOrWhiteSpace(fileLocation) ? null : new FileInfo(fileLocation);
+        }
+
+        private void aboutLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            new AboutBox().ShowDialog();
+        }
+
+        private void changeFileButton_Click(object sender, EventArgs e)
+        {
+            EncryptedFileInfo = PickTargetFile();
+        }
+
+        private void HidePassword()
+        {
+            showPasswordHoldButton.BackColor = SystemColors.Control;
+            showPasswordHoldButton.Image = Resources.black_eye16;
+            passwordBox.UseSystemPasswordChar = true;
         }
 
         /// <summary>
@@ -53,38 +96,52 @@ namespace DragEncrypt
             // hash password
             using (var hasher = new SHA256Managed())
             {
-                FileCryptographer.HashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
+                _fileCryptographer.HashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
                 passwordBox.Text = null;
             }
 
             // lock interface
-            passwordBox.Enabled = false;
-            showPasswordHoldButton.Enabled = false;
-            submitButton.Enabled = false;
+            mainTableLayoutPanel.Enabled = false;
 
             // hide button, show progress bar
             submitButton.Visible = false;
             progressBar.Visible = true;
+
+            // start decryption/encryption
+            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            {
+                Task.Factory.StartNew(() => _fileCryptographer.DecryptFile(EncryptedFileInfo));
+            }
+            else
+            {
+                Task.Factory.StartNew(() => _fileCryptographer.EncryptFile(EncryptedFileInfo));
+            }
         }
 
-        private void showPasswordHoldButton_MouseDown(object sender, MouseEventArgs e)
+        private void ShowPassword()
         {
             showPasswordHoldButton.BackColor = SystemColors.WindowText;
             showPasswordHoldButton.Image = Resources.white_eye16;
             passwordBox.UseSystemPasswordChar = false;
-            progressBar.ForeColor = SystemColors.WindowText;
         }
 
+        private void showPasswordHoldButton_KeyDown(object sender, KeyEventArgs e)
+        {
+            ShowPassword();
+        }
+
+        private void showPasswordHoldButton_KeyUp(object sender, KeyEventArgs e)
+        {
+            HidePassword();
+        }
+
+        private void showPasswordHoldButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            ShowPassword();
+        }
         private void showPasswordHoldButton_MouseUp(object sender, MouseEventArgs e)
         {
-            showPasswordHoldButton.BackColor = SystemColors.Control;
-            showPasswordHoldButton.Image = Resources.black_eye16;
-            passwordBox.UseSystemPasswordChar = true;
-        }
-
-        private void aboutLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            new AboutBox().ShowDialog();
+            HidePassword();
         }
     }
 }

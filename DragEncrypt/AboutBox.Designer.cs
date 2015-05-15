@@ -28,12 +28,12 @@
         private void InitializeComponent()
         {
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.labelProductName = new System.Windows.Forms.Label();
             this.labelVersion = new System.Windows.Forms.Label();
             this.labelCopyright = new System.Windows.Forms.Label();
             this.textBoxDescription = new System.Windows.Forms.TextBox();
             this.okButton = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -60,6 +60,20 @@
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
             this.tableLayoutPanel.Size = new System.Drawing.Size(417, 265);
             this.tableLayoutPanel.TabIndex = 0;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBox1.Location = new System.Drawing.Point(110, 148);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(6, 3, 3, 3);
+            this.textBox1.Multiline = true;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBox1.Size = new System.Drawing.Size(304, 82);
+            this.textBox1.TabIndex = 25;
+            this.textBox1.TabStop = false;
+            this.textBox1.Text = "Licenses";
             // 
             // labelProductName
             // 
@@ -120,20 +134,6 @@
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 24;
             this.okButton.Text = "&OK";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox1.Location = new System.Drawing.Point(110, 148);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(6, 3, 3, 3);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox1.Size = new System.Drawing.Size(304, 82);
-            this.textBox1.TabIndex = 25;
-            this.textBox1.TabStop = false;
-            this.textBox1.Text = "Licenses";
             // 
             // AboutBox
             // 

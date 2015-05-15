@@ -31,7 +31,7 @@ namespace DragEncrypt
         /// </summary>
         private void InitializeComponent()
         {
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.fileSelectPanel = new System.Windows.Forms.Panel();
             this.changeFileButton = new System.Windows.Forms.Button();
             this.optionsGroupBox = new System.Windows.Forms.GroupBox();
@@ -45,51 +45,51 @@ namespace DragEncrypt
             this.showPasswordHoldButton = new System.Windows.Forms.Button();
             this.passwordBox = new System.Windows.Forms.TextBox();
             this.aboutLinkLabel = new System.Windows.Forms.LinkLabel();
-            this.fileLocationLabel = new System.Windows.Forms.Label();
-            this.tableLayoutPanel1.SuspendLayout();
+            this.filePathLabel = new DragEncrypt.PathLabel();
+            this.mainTableLayoutPanel.SuspendLayout();
             this.fileSelectPanel.SuspendLayout();
             this.optionsGroupBox.SuspendLayout();
             this.submitPanel.SuspendLayout();
             this.passwordPanel.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tableLayoutPanel1
+            // mainTableLayoutPanel
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 58F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Controls.Add(this.fileSelectPanel, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.optionsGroupBox, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.passwordLabel, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.fileLabel, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.submitPanel, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.passwordPanel, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.aboutLinkLabel, 0, 3);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 4;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(384, 129);
-            this.tableLayoutPanel1.TabIndex = 0;
+            this.mainTableLayoutPanel.ColumnCount = 2;
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 58F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.mainTableLayoutPanel.Controls.Add(this.fileSelectPanel, 1, 0);
+            this.mainTableLayoutPanel.Controls.Add(this.optionsGroupBox, 0, 2);
+            this.mainTableLayoutPanel.Controls.Add(this.passwordLabel, 0, 1);
+            this.mainTableLayoutPanel.Controls.Add(this.fileLabel, 0, 0);
+            this.mainTableLayoutPanel.Controls.Add(this.submitPanel, 1, 3);
+            this.mainTableLayoutPanel.Controls.Add(this.passwordPanel, 1, 1);
+            this.mainTableLayoutPanel.Controls.Add(this.aboutLinkLabel, 0, 3);
+            this.mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mainTableLayoutPanel.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
+            this.mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
+            this.mainTableLayoutPanel.Name = "mainTableLayoutPanel";
+            this.mainTableLayoutPanel.RowCount = 4;
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.mainTableLayoutPanel.Size = new System.Drawing.Size(384, 129);
+            this.mainTableLayoutPanel.TabIndex = 0;
             // 
             // fileSelectPanel
             // 
             this.fileSelectPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.fileSelectPanel.Controls.Add(this.fileLocationLabel);
+            this.fileSelectPanel.Controls.Add(this.filePathLabel);
             this.fileSelectPanel.Controls.Add(this.changeFileButton);
             this.fileSelectPanel.Location = new System.Drawing.Point(58, 0);
             this.fileSelectPanel.Margin = new System.Windows.Forms.Padding(0);
             this.fileSelectPanel.Name = "fileSelectPanel";
             this.fileSelectPanel.Size = new System.Drawing.Size(328, 25);
-            this.fileSelectPanel.TabIndex = 2;
+            this.fileSelectPanel.TabIndex = 1;
             // 
             // changeFileButton
             // 
@@ -104,20 +104,21 @@ namespace DragEncrypt
             this.changeFileButton.Margin = new System.Windows.Forms.Padding(0);
             this.changeFileButton.Name = "changeFileButton";
             this.changeFileButton.Size = new System.Drawing.Size(21, 22);
-            this.changeFileButton.TabIndex = 1;
-            this.changeFileButton.TabStop = false;
+            this.changeFileButton.TabIndex = 0;
             this.changeFileButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.changeFileButton.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.changeFileButton.UseVisualStyleBackColor = false;
+            this.changeFileButton.Click += new System.EventHandler(this.changeFileButton_Click);
             // 
             // optionsGroupBox
             // 
-            this.tableLayoutPanel1.SetColumnSpan(this.optionsGroupBox, 2);
+            this.mainTableLayoutPanel.SetColumnSpan(this.optionsGroupBox, 2);
             this.optionsGroupBox.Controls.Add(this.deleteFileCheckBox);
             this.optionsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.optionsGroupBox.Location = new System.Drawing.Point(3, 59);
             this.optionsGroupBox.Name = "optionsGroupBox";
             this.optionsGroupBox.Size = new System.Drawing.Size(380, 38);
-            this.optionsGroupBox.TabIndex = 0;
+            this.optionsGroupBox.TabIndex = 2;
             this.optionsGroupBox.TabStop = false;
             this.optionsGroupBox.Text = "Options";
             // 
@@ -167,13 +168,15 @@ namespace DragEncrypt
             this.submitPanel.Location = new System.Drawing.Point(61, 103);
             this.submitPanel.Name = "submitPanel";
             this.submitPanel.Size = new System.Drawing.Size(322, 23);
-            this.submitPanel.TabIndex = 2;
+            this.submitPanel.TabIndex = 3;
             // 
             // submitButton
             // 
             this.submitButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.submitButton.Location = new System.Drawing.Point(247, 0);
+            this.submitButton.Image = global::DragEncrypt.Properties.Resources.black_eye16;
+            this.submitButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.submitButton.Location = new System.Drawing.Point(246, 0);
             this.submitButton.Margin = new System.Windows.Forms.Padding(0);
             this.submitButton.MaximumSize = new System.Drawing.Size(75, 23);
             this.submitButton.MinimumSize = new System.Drawing.Size(75, 23);
@@ -181,13 +184,15 @@ namespace DragEncrypt
             this.submitButton.Size = new System.Drawing.Size(75, 23);
             this.submitButton.TabIndex = 0;
             this.submitButton.Text = "Do";
+            this.submitButton.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.submitButton.UseVisualStyleBackColor = true;
+            this.submitButton.Click += new System.EventHandler(this.insertButton_Click);
             // 
             // progressBar
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(247, 0);
+            this.progressBar.Location = new System.Drawing.Point(246, 0);
             this.progressBar.MaximumSize = new System.Drawing.Size(75, 23);
             this.progressBar.MinimumSize = new System.Drawing.Size(75, 23);
             this.progressBar.Name = "progressBar";
@@ -223,10 +228,11 @@ namespace DragEncrypt
             this.showPasswordHoldButton.Name = "showPasswordHoldButton";
             this.showPasswordHoldButton.Size = new System.Drawing.Size(21, 20);
             this.showPasswordHoldButton.TabIndex = 1;
-            this.showPasswordHoldButton.TabStop = false;
             this.showPasswordHoldButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.showPasswordHoldButton.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.showPasswordHoldButton.UseVisualStyleBackColor = false;
+            this.showPasswordHoldButton.KeyDown += new System.Windows.Forms.KeyEventHandler(this.showPasswordHoldButton_KeyDown);
+            this.showPasswordHoldButton.KeyUp += new System.Windows.Forms.KeyEventHandler(this.showPasswordHoldButton_KeyUp);
             this.showPasswordHoldButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.showPasswordHoldButton_MouseDown);
             this.showPasswordHoldButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.showPasswordHoldButton_MouseUp);
             // 
@@ -254,14 +260,18 @@ namespace DragEncrypt
             this.aboutLinkLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.aboutLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.aboutLinkLabel_LinkClicked);
             // 
-            // fileLocationLabel
+            // filePathLabel
             // 
-            this.fileLocationLabel.Location = new System.Drawing.Point(0, 1);
-            this.fileLocationLabel.Name = "fileLocationLabel";
-            this.fileLocationLabel.Size = new System.Drawing.Size(304, 24);
-            this.fileLocationLabel.TabIndex = 0;
-            this.fileLocationLabel.Text = "label1";
-            this.fileLocationLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.filePathLabel.Location = new System.Drawing.Point(0, 0);
+            this.filePathLabel.Name = "filePathLabel";
+            this.filePathLabel.Size = new System.Drawing.Size(304, 25);
+            this.filePathLabel.TabIndex = 2;
+            this.filePathLabel.Text = "C:\\Users\\Dustine\\Documents\\Visual Studio 2013\\Projects\\DragEncrypt\\DragEncrypt\\bi" +
+    "n\\Debug";
+            this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // MainProcess
             // 
@@ -270,13 +280,13 @@ namespace DragEncrypt
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(384, 129);
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.mainTableLayoutPanel);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(400, 168);
             this.Name = "MainProcess";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "DragEncrypt";
-            this.tableLayoutPanel1.ResumeLayout(false);
+            this.mainTableLayoutPanel.ResumeLayout(false);
             this.fileSelectPanel.ResumeLayout(false);
             this.optionsGroupBox.ResumeLayout(false);
             this.optionsGroupBox.PerformLayout();
@@ -289,7 +299,7 @@ namespace DragEncrypt
 
         #endregion
 
-        private TableLayoutPanel tableLayoutPanel1;
+        private TableLayoutPanel mainTableLayoutPanel;
         private Label passwordLabel;
         private Button showPasswordHoldButton;
         private TextBox passwordBox;
@@ -302,7 +312,7 @@ namespace DragEncrypt
         private Label fileLabel;
         private Panel fileSelectPanel;
         private Button changeFileButton;
-        private Label fileLocationLabel;
         private LinkLabel aboutLinkLabel;
+        private PathLabel filePathLabel;
     }
 }

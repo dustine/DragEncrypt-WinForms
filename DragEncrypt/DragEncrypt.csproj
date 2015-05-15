@@ -75,6 +75,9 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="FileCryptographer.cs" />
+    <Compile Include="PathLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="MainProcess.cs">
       <SubType>Form</SubType>
