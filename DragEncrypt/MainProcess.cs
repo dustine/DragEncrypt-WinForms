@@ -24,14 +24,15 @@ namespace DragEncrypt
             get { return _encryptedFileInfo; }
             set
             {
-                _encryptedFileInfo = value;
-                if (_encryptedFileInfo == null)
+                if (value == null)
                 {
+                    if (_encryptedFileInfo != null) return;
                     submitButton.Enabled = false;
                     filePathLabel.Text = "";
                 }
                 else
                 {
+                    _encryptedFileInfo = value;
                     submitButton.Enabled = true;
                     filePathLabel.Text = _encryptedFileInfo.FullName;
                     ChangeSubmitButtonText();

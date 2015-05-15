@@ -13,10 +13,6 @@ namespace DragEncrypt
 {
     public class FileCryptographer
     {
-        public FileCryptographer()
-        {
-        }
-
         public byte[] HashedKey { set; private get; }
 
         private static void Error(Exception e)
