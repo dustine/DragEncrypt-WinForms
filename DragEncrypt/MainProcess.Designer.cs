@@ -174,6 +174,7 @@ namespace DragEncrypt
             // 
             this.submitButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.submitButton.Enabled = false;
             this.submitButton.Image = global::DragEncrypt.Properties.Resources.black_eye16;
             this.submitButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.submitButton.Location = new System.Drawing.Point(246, 0);
@@ -269,8 +270,6 @@ namespace DragEncrypt
             this.filePathLabel.Name = "filePathLabel";
             this.filePathLabel.Size = new System.Drawing.Size(304, 25);
             this.filePathLabel.TabIndex = 2;
-            this.filePathLabel.Text = "C:\\Users\\Dustine\\Documents\\Visual Studio 2013\\Projects\\DragEncrypt\\DragEncrypt\\bi" +
-    "n\\Debug";
             this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // MainProcess

@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
-using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using DragEncrypt.Properties;
-using Newtonsoft.Json;
 
 namespace DragEncrypt
 {
