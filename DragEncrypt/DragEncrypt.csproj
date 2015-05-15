@@ -74,7 +74,9 @@
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="DecryptAesCbc.cs" />
     <Compile Include="FileCryptographer.cs" />
+    <Compile Include="IDecryptionAlgorithm.cs" />
     <Compile Include="PathLabel.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -145,6 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\1431714739_66-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tests\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
