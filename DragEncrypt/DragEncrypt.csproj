@@ -75,6 +75,7 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DecryptAesCbc.cs" />
+    <Compile Include="EncryptionInfo.cs" />
     <Compile Include="FileCryptographer.cs" />
     <Compile Include="IDecryptionAlgorithm.cs" />
     <Compile Include="PathLabel.cs">
@@ -107,7 +108,7 @@
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
@@ -148,9 +149,7 @@
   <ItemGroup>
     <None Include="Resources\1431714739_66-16.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Tests\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
