@@ -12,8 +12,8 @@ Decryption is done with the same method as encrypting, just requiring the encryp
 The program takes no extra security precautions during its run, beyond trying to delete the unecrypted password 'quickly', so the process is rather vulnerable to attacks before and during encryption, likewise for decryption. However the created encrypted file *should* be mostly safe from brute-force attacks or re-engineering, or at least [as safe](https://howsecureismypassword.net) as the chosen password. 
 
 ##To-do
-- [ ] Option to delete the original unencrypted file 
-  - [ ] Doing it in a 'safe' manner (leaving no recoverable content behind) 
+- [x] Option to delete the original unencrypted file 
+  - [x] Doing it in a 'safe' manner (leaving no recoverable content behind) 
 - [ ] Adding better version and internal algorithm handling
 - [ ] Better exception handling. *Much* better exception handling
 - [ ] Make the progress bar useful, or remove it outright
