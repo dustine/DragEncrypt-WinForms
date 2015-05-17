@@ -8,7 +8,6 @@ namespace DragEncrypt
     {
         private int _count;
         private readonly TempFileCollection _collection;
-        public string Extension { get; private set; }
 
         public TempFileInfoGenerator(string extension = "tmp")
         {
@@ -28,20 +27,23 @@ namespace DragEncrypt
             Extension = extension;
         }
 
+        public string Extension { get; private set; }
+
         public void Dispose()
         {
-            ((IDisposable)_collection).Dispose();
+            ((IDisposable) _collection).Dispose();
         }
 
         /// <summary>
-        /// Creates an unique temporary file and returns their FileInfo.
-        /// The file is named as follows, with N being an incremental numeric identifier:
-        /// N-<paramref name="name"/>.<value>Extension</value>
+        ///     Creates an unique temporary file and returns their FileInfo.
+        ///     The file is named as follows, with N being an incremental numeric identifier:
+        ///     N-<paramref name="name" />.
+        ///     <value>Extension</value>
         /// </summary>
         /// <param name="name">The name component of the newly created file</param>
         /// <param name="keepFile">If set to true, when the generator is disposed the file isn't disposed to as well</param>
         /// <returns>The fileinfo of</returns>
-        public FileInfo CreateFile(string name="", bool keepFile=false)
+        public FileInfo CreateFile(string name = "", bool keepFile = false)
         {
             if (String.IsNullOrWhiteSpace(name)) name = GetHashCode().ToString();
             var extension = String.Format("{0}.{1}.{2}", name, _count++, Extension);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 using DragEncrypt.Properties;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -12,10 +11,8 @@ namespace DragEncrypt.Tests
     internal class FileCryptographerTest
     {
         private const string TestDirectory = "DragEncrypt-tests/";
-        private String _key;
         private FileInfo _originalFile;
         private FileInfo _testFile;
-        private readonly Randomizer _randomizer = new Randomizer();
         private FileInfo _resultingFile;
 
         [SetUp]
@@ -166,6 +163,32 @@ namespace DragEncrypt.Tests
 
             // assertion
             FileAssert.AreEqual(_originalFile, _testFile);
+        }
+
+        [Test]
+        public void SafeOverwriteFile_OverwriteTestFile_EqualOrBiggerLength()
+        {
+            //arrange
+            //action
+            FileCryptographer.SafeOverwriteFile(_testFile);
+            //assert
+            Assert.GreaterOrEqual(_testFile.Length,_originalFile.Length);
+        }
+
+        [Test]
+        public void SafeOverwriteFile_OverwriteTestFile_EmptyFile()
+        {
+            //arrange
+            //action
+            FileCryptographer.SafeOverwriteFile(_testFile);
+            //assert
+            using (var fs = _testFile.OpenRead())
+            {
+                while (fs.Position < fs.Length)
+                {
+                    Assert.AreEqual(fs.ReadByte(), 0);
+                }
+            }
         }
     }
 }

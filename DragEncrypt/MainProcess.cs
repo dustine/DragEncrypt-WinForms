@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DragEncrypt.Properties;
@@ -11,8 +9,13 @@ namespace DragEncrypt
 {
     public partial class MainProcess : Form
     {
-        private readonly FileCryptographer _fileCryptographer = new FileCryptographer();
         private FileInfo _encryptedFileInfo;
+
+        public MainProcess(string fileLocation)
+        {
+            InitializeComponent();
+            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) ? PickTargetFile() : new FileInfo(fileLocation);
+        }
 
         private FileInfo EncryptedFileInfo
         {
@@ -37,19 +40,15 @@ namespace DragEncrypt
 
         private void ChangeSubmitButtonText()
         {
-            submitButton.Text = FileCryptographer.IsEncrypted(EncryptedFileInfo) ? Resources.MainProcess_MainProcess_Decrypt : Resources.MainProcess_MainProcess_Encrypt;
-        }
-
-        public MainProcess(string fileLocation)
-        {
-            InitializeComponent();
-            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) ? PickTargetFile() : new FileInfo(fileLocation);
+            submitButton.Text = FileCryptographer.IsEncrypted(EncryptedFileInfo)
+                ? Resources.MainProcess_MainProcess_Decrypt
+                : Resources.MainProcess_MainProcess_Encrypt;
         }
 
         private static FileInfo PickTargetFile()
         {
             string fileLocation;
-            using (var openFile = new OpenFileDialog()
+            using (var openFile = new OpenFileDialog
             {
                 Multiselect = false,
                 CheckPathExists = true,
@@ -81,18 +80,18 @@ namespace DragEncrypt
         }
 
         /// <summary>
-        /// Common event handler for pressing the Password Insert button
+        ///     Common event handler for pressing the Password Insert button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void insertButton_Click(object sender, EventArgs e)
         {
-            // hash password
-            using (var hasher = new SHA256CryptoServiceProvider())
-            {
-                _fileCryptographer.HashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
-                passwordBox.Text = null;
-            }
+            //// hash password
+            //using (var hasher = new SHA256CryptoServiceProvider())
+            //{
+            //    _fileCryptographer.HashedKey = hasher.ComputeHash(Encoding.Unicode.GetBytes(passwordBox.Text));
+            //    
+            //}
 
             // lock interface
             mainTableLayoutPanel.Enabled = false;
@@ -103,25 +102,34 @@ namespace DragEncrypt
 
             // start decryption/encryption
             var ts = TaskScheduler.FromCurrentSynchronizationContext();
-   
+            var key = passwordBox.Text;
+            passwordBox.Text = null;
+
             if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
             {
-                Task.Factory.StartNew(() => _fileCryptographer.DecryptFile(EncryptedFileInfo, deleteFileCheckBox.Checked))
+                Task.Factory.StartNew(
+                    () =>
+                        FileCryptographer.DecryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
+                        key = null;
                         Close();
                     }, ts);
             }
             else
             {
-                Task.Factory.StartNew(() => _fileCryptographer.EncryptFile(EncryptedFileInfo, deleteFileCheckBox.Checked))
+                Task.Factory.StartNew(
+                    () =>
+                        FileCryptographer.EncryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
+                        key = null;
                         Close();
                     }, ts);
             }
+            
         }
 
         private void ShowPassword()
@@ -145,10 +153,12 @@ namespace DragEncrypt
         {
             ShowPassword();
         }
+
         private void showPasswordHoldButton_MouseUp(object sender, MouseEventArgs e)
         {
             HidePassword();
         }
+
         private static bool Error(Exception e)
         {
             MessageBox.Show(e.ToString());

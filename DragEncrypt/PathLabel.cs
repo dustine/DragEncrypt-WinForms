@@ -1,13 +1,14 @@
 ﻿using System.ComponentModel;
-using System.Windows.Forms;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace DragEncrypt
 {
     /// <summary>
-    /// Based on: http://stackoverflow.com/questions/2397860/c-sharp-winforms-smart-textbox-control-to-auto-format-path-length-based-on-tex
+    ///     Based on:
+    ///     http://stackoverflow.com/questions/2397860/c-sharp-winforms-smart-textbox-control-to-auto-format-path-length-based-on-tex
     /// </summary>
-    class PathLabel : Label
+    internal class PathLabel : Label
     {
         [Browsable(false)]
         public override bool AutoSize
@@ -15,6 +16,7 @@ namespace DragEncrypt
             get { return base.AutoSize; }
             set { base.AutoSize = false; }
         }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             var flags = TextFormatFlags.PathEllipsis | GetContentAlligment();
@@ -29,7 +31,7 @@ namespace DragEncrypt
                 case ContentAlignment.BottomCenter:
                     return TextFormatFlags.Bottom | TextFormatFlags.HorizontalCenter;
                 case ContentAlignment.BottomLeft:
-                    return TextFormatFlags.Bottom| TextFormatFlags.Left;
+                    return TextFormatFlags.Bottom | TextFormatFlags.Left;
                 case ContentAlignment.BottomRight:
                     return TextFormatFlags.Bottom | TextFormatFlags.Right;
                 case ContentAlignment.MiddleCenter:
