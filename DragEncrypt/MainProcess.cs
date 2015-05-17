@@ -109,7 +109,7 @@ namespace DragEncrypt
             {
                 Task.Factory.StartNew(
                     () =>
-                        FileCryptographer.DecryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
+                        FileCryptographer.DecryptFile(EncryptedFileInfo, key))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
@@ -129,7 +129,6 @@ namespace DragEncrypt
                         Close();
                     }, ts);
             }
-            
         }
 
         private void ShowPassword()

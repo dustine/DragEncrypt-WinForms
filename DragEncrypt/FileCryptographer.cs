@@ -28,34 +28,36 @@ namespace DragEncrypt
         /// <summary>
         ///     Tries to decrypt the file fi, using the private hashed hashedKey
         /// </summary>
-        /// <param name="encryptedFileInfo"></param>
+        /// <param name="encryptedFile"></param>
         /// <param name="key"></param>
-        /// <param name="deleteOriginalSafely"></param>
-        public static void DecryptFile(FileInfo encryptedFileInfo, string key, bool deleteOriginalSafely = false)
+        public static FileInfo DecryptFile(FileInfo encryptedFile, string key)
         {
+            if (encryptedFile == null) throw new ArgumentNullException("encryptedFile");
+            if (key == null) throw new ArgumentNullException("key");
             // ready encryption hashedKey and info
             EncryptionInfo info;
             // obtaining original json header
-            using (var encryptedFileStream = encryptedFileInfo.OpenText())
+            using (var encryptedFs = encryptedFile.OpenText())
             {
                 var js = new JsonSerializer {CheckAdditionalContent = false};
-                info = (EncryptionInfo) js.Deserialize(encryptedFileStream, typeof (EncryptionInfo));
+                info = (EncryptionInfo) js.Deserialize(encryptedFs, typeof (EncryptionInfo));
             }
             byte[] hashedKey;
             EncryptKey(key, info, out hashedKey);
 
             // decrypting the file
-            var newFileInfo = new FileInfo(encryptedFileInfo.FullName.Substring(0,
-                encryptedFileInfo.FullName.Length - Settings.Default.Extension.Length));
+            // prevent conflict with any existing file
+            var newFile = GetNonCollidingFile(encryptedFile.FullName.Substring(0,
+                encryptedFile.FullName.Length - Settings.Default.Extension.Length));
             using (var tempFiles = new TempFileInfoGenerator())
             {
-                var zippedFileInfo = tempFiles.CreateFile();
+                var zippedFile = tempFiles.CreateFile();
 
                 // find the "end" of the JSON header
-                var encryptedPortionLength = SeekEndOfJsonHeader(encryptedFileInfo);
+                var encryptedPortionLength = SeekEndOfJsonHeader(encryptedFile);
 
                 // decrypting to temporary gzipped file
-                using (var encryptedFs = encryptedFileInfo.OpenRead())
+                using (var encryptedFs = encryptedFile.OpenRead())
                 using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
                 {
                     // loading cryptography parameters
@@ -71,25 +73,45 @@ namespace DragEncrypt
                     using (
                         var cs = new CryptoStream(encryptedFs, crypter.CreateDecryptor(),
                             CryptoStreamMode.Read))
-                    using (var zippedFileStream = zippedFileInfo.OpenWrite())
+                    using (var zippedFileStream = zippedFile.OpenWrite())
                         cs.CopyTo(zippedFileStream);
                 }
 
-                // unzip from the temporary file into the final permanent file
-                using (var zippedFileStream = zippedFileInfo.OpenRead())
-                using (var newFileStream = newFileInfo.Open(FileMode.Create, FileAccess.Write))
-                using (var zipper = new GZipStream(zippedFileStream, CompressionMode.Decompress))
-                    zipper.CopyTo(newFileStream);
-            }
+                // delete hashed key
+                ShallowEraseList(hashedKey);
 
+                // unzip from the temporary file into the final permanent file
+                using (var zippedFs = zippedFile.OpenRead())
+                using (var newFs = newFile.Open(FileMode.Create, FileAccess.Write))
+                using (var zipper = new GZipStream(zippedFs, CompressionMode.Decompress))
+                    zipper.CopyTo(newFs);
+
+                // safely delete the zipped file, as it shouldn't stay in the OS like that
+                SafeOverwriteFile(zippedFile);
+                zippedFile.Delete();
+            }
             // check the hash of the final product, must match to the hash stored in the header
-            var newHash = Hash(newFileInfo, info.HashAlgorithm);
+            var newHash = Hash(newFile, info.HashAlgorithm);
             if (newHash.Equals(info.OriginalHash, StringComparison.CurrentCultureIgnoreCase))
-                return;
+                return newFile;
             throw new CryptographicException("Result hash does not match initial hash");
         }
 
-        private static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
+        // TODO: Prevent infinite loop if a match is never found (somehow)
+        private static FileInfo GetNonCollidingFile(string fileProposal)
+        {
+            var conflictFile = new FileInfo(fileProposal);
+            if (!conflictFile.Exists) return conflictFile;
+            for (var i = 1;; i++)
+            {
+                var target = String.Format("{0}/{1} ({2}){3}", conflictFile.DirectoryName,
+                    conflictFile.Name.Substring(0, conflictFile.Name.Length - conflictFile.Extension.Length), i,
+                    conflictFile.Extension);
+                if (!File.Exists(target)) return new FileInfo(target);
+            }
+        }
+
+        internal static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
         {
             // TODO: Make this unhackish again
             long encryptedPortionLength;
@@ -120,11 +142,12 @@ namespace DragEncrypt
         /// <summary>
         ///     Encrypts the given file, using the private hashed hashedKey
         /// </summary>
-        /// <param name="originalFileInfo"></param>
+        /// <param name="originalFile"></param>
         /// <param name="key"></param>
         /// <param name="deleteOriginalSafely"></param>
-        public static void EncryptFile(FileInfo originalFileInfo, string key, bool deleteOriginalSafely = false)
+        public static FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
         {
+            if (originalFile == null) throw new ArgumentNullException("originalFile");
             // ready encryption hashedKey and info
             var info = new EncryptionInfo
             {
@@ -139,8 +162,8 @@ namespace DragEncrypt
             EncryptKey(key, info, out hashedKey);
 
             // hash original file
-            var hash = Hash(originalFileInfo, info.HashAlgorithm);
-            var newFileInfo = new FileInfo(originalFileInfo.FullName + Settings.Default.Extension);
+            var hash = Hash(originalFile, info.HashAlgorithm);
+            var newFile = GetNonCollidingFile(originalFile.FullName + Settings.Default.Extension);
 
             // encrypt original file with info header in the start
             using (var tempFiles = new TempFileInfoGenerator())
@@ -152,51 +175,49 @@ namespace DragEncrypt
                 //Debug.Assert(crypter.ValidKeySize(256));
 
                 // create temporary files
-                var zippedFileInfo = tempFiles.CreateFile();
-                var encryptedFileInfo = tempFiles.CreateFile();
+                var zippedFile = tempFiles.CreateFile();
 
                 // zip original file into temporary zipped file
-                using (var zippedFileStream = zippedFileInfo.OpenWrite())
-                using (var zipper = new GZipStream(zippedFileStream, CompressionMode.Compress))
-                using (var originalFileStream = originalFileInfo.OpenRead())
-                    originalFileStream.CopyTo(zipper);
+                using (var zippedFs = zippedFile.OpenWrite())
+                using (var zipper = new GZipStream(zippedFs, CompressionMode.Compress))
+                using (var originalFs = originalFile.OpenRead())
+                    originalFs.CopyTo(zipper);
                 //progressBar.BeginInvoke(new Action(() => { progressBar.Increment(5); }));
 
-                // encrypt zipped file into temporary encrypted file
-                using (var zippedResultFileStream = zippedFileInfo.OpenRead())
-                using (
-                    var cs = new CryptoStream(zippedResultFileStream, crypter.CreateEncryptor(), CryptoStreamMode.Read))
-                using (var encryptedStream = encryptedFileInfo.OpenWrite())
-                    cs.CopyTo(encryptedStream);
-
                 // add Json header to final file with a text stream
-                using (var newFileTextStream = newFileInfo.CreateText())
+                using (var newFs = newFile.CreateText())
                 {
                     info.OriginalHash = hash;
                     info.Iv = crypter.IV;
-                    newFileTextStream.Write(JsonConvert.SerializeObject(info));
+                    newFs.Write(JsonConvert.SerializeObject(info));
                 }
 
-                // join the two files (encypted and final)
-                using (var encryptedStream = encryptedFileInfo.OpenRead())
-                using (var newFileStream = newFileInfo.Open(FileMode.Append, FileAccess.Write))
-                    encryptedStream.CopyTo(newFileStream);
+                // encrypt zipped file into final file, as an append
+                using (var zippedFs = zippedFile.OpenRead())
+                using (
+                    var cs = new CryptoStream(zippedFs, crypter.CreateEncryptor(), CryptoStreamMode.Read))
+                using (var newFs = newFile.Open(FileMode.Open, FileAccess.ReadWrite))
+                {
+                    newFs.Seek(0, SeekOrigin.End);
+                    cs.CopyTo(newFs);
+                }
+
+                // delete hashed key
+                ShallowEraseList(hashedKey);
+
+                // safely delete the zipped file, as it shouldn't stay in the OS like that
+                SafeOverwriteFile(zippedFile);
+                zippedFile.Delete();
             }
 
-            if (!deleteOriginalSafely) return;
-            originalFileInfo.Encrypt();
-            originalFileInfo.Delete();
-
-            //var length = originalFileInfo.Length;
-            //using (var )
-            //using (var originalFileStream = originalFileInfo.OpenWrite())
-            //{
-            //    var stream = new stream
-            //    originalFileStream.Write();
-            //}
+            // safe deleting of the original file
+            if (!deleteOriginalSafely) return newFile;
+            SafeOverwriteFile(originalFile);
+            originalFile.Delete();
+            return newFile;
         }
 
-        private static void ShallowEraseList<T>(IList<T> bytes)
+        internal static void ShallowEraseList<T>(IList<T> bytes)
         {
             if (bytes == null) return;
             for (var i = 0; i < bytes.Count; i++)
@@ -209,13 +230,13 @@ namespace DragEncrypt
         /// <param name="file">The file to obtain the fash from</param>
         /// <param name="hashAlgorithm"></param>
         /// <returns>The hash, written a sequence of hexadecimal digits duplets</returns>
-        static string Hash(FileInfo file, Type hashAlgorithm)
+        internal static string Hash(FileInfo file, Type hashAlgorithm)
         {
-            using (var fileStream = file.OpenRead())
+            using (var fs = file.OpenRead())
             using (var hasher = Activator.CreateInstance(hashAlgorithm) as HashAlgorithm)
             {
                 Debug.Assert(hasher != null, "hasher != null");
-                var hash = hasher.ComputeHash(fileStream);
+                var hash = hasher.ComputeHash(fs);
                 var sb = new StringBuilder();
                 foreach (var b in hash)
                     sb.AppendFormat("{0:x2}", b);
@@ -223,7 +244,7 @@ namespace DragEncrypt
             }
         }
 
-        static void EncryptKey(string key, EncryptionInfo info, out byte[] hashedKey)
+        internal static void EncryptKey(string key, EncryptionInfo info, out byte[] hashedKey)
         {
             var keyGen = info.Salt == null
                 ? new Rfc2898DeriveBytes(key, info.SaltSize/8)
@@ -237,15 +258,11 @@ namespace DragEncrypt
         {
             var buffer = new byte[1024/8];
             for (var i = buffer.Length - 1; i >= 0; i--)
-            {
                 buffer[i] = 0;
-            }
             using (var fs = file.OpenWrite())
             {
-                for (var i = file.Length/buffer.Length ; i >= 0; i--)
-                {
-                    fs.Write(buffer,0,buffer.Length);
-                }
+                for (var i = file.Length/buffer.Length; i >= 0; i--)
+                    fs.Write(buffer, 0, buffer.Length);
             }
         }
     }
