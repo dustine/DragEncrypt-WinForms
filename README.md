@@ -11,13 +11,5 @@ Decryption is done with the same method as encrypting, just requiring the encryp
 ##Safety concerts
 The program takes no extra security precautions during its run, beyond trying to delete the unecrypted password 'quickly', so the process is rather vulnerable to attacks before and during encryption, likewise for decryption. However the created encrypted file *should* be mostly safe from brute-force attacks or re-engineering, or at least [as safe](https://howsecureismypassword.net) as the chosen password. 
 
-##To-do
-- [x] Option to delete the original unencrypted file 
-  - [x] Doing it in a 'safe' manner (leaving no recoverable content behind) 
-- [ ] Adding better version and internal algorithm handling
-- [ ] Better exception handling. *Much* better exception handling
-- [ ] Make the progress bar useful, or remove it outright
-- [ ] Securing the meta-data and its contents more rigidly
-
 ##Contributing
 <div xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/" about="http://www.wpzoom.com/wpzoom/new-freebie-wpzoom-developer-icon-set-154-free-icons/">This software contains icons from the <span property="dct:title">WPZOOM Developer Icon Set</span> (<a rel="cc:attributionURL" property="cc:attributionName" href="http://www.wpzoom.com">WPZOOM</a>) / <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>.</div>
