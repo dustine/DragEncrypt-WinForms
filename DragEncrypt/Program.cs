@@ -17,7 +17,7 @@ namespace DragEncrypt
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainProcess(arguments != null && arguments.Length <= 0 ? "" : arguments[0]));
+            Application.Run(new MainProcess(arguments == null || arguments.Length <= 0 ? "" : arguments[0]));
         }
 
         //http://www.digitallycreated.net/Blog/61/combining-multiple-assemblies-into-a-single-exe-for-a-wpf-application
