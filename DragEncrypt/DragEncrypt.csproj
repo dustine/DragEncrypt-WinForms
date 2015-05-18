@@ -49,6 +49,9 @@
   <PropertyGroup>
     <StartupObject>DragEncrypt.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\DrawEncrypt.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -116,9 +119,6 @@
     <None Include="Resources\1431373618_34-16.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\1431373618_34-16_grey.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\1431373618_34-16_white.png" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +140,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\1431714739_66-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DrawEncrypt.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -202,10 +202,9 @@ namespace DragEncrypt.Tests
         public void Encrypt_AnyStringKey_HasFilledInJsonHeader()
         {
             // arrange
-
-            // action
             FileCryptographer.EncryptFile(_originalFile, "");
 
+            // action
             EncryptionInfo encryptInfo;
             using (var stream = _encryptedFile.OpenText())
             {
@@ -284,8 +283,9 @@ namespace DragEncrypt.Tests
         [ExpectedException(typeof(IOException))]
         public void Decrypt_UnavailableFile_IOException()
         {
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
             // arrange
+            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
+            
             // ReSharper disable once UnusedVariable
             using (var fs = _encryptedFile.Open(FileMode.Open, FileAccess.ReadWrite))
             {

@@ -31,6 +31,7 @@ namespace DragEncrypt
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainProcess));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.fileSelectPanel = new System.Windows.Forms.Panel();
             this.changeFileButton = new System.Windows.Forms.Button();
@@ -131,6 +132,7 @@ namespace DragEncrypt
             this.deleteFileCheckBox.TabIndex = 0;
             this.deleteFileCheckBox.Text = "Delete the targetted file safely";
             this.deleteFileCheckBox.UseVisualStyleBackColor = true;
+            this.deleteFileCheckBox.CheckStateChanged += new System.EventHandler(this.deleteFileCheckBox_CheckStateChanged);
             // 
             // passwordLabel
             // 
@@ -280,6 +282,7 @@ namespace DragEncrypt
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(384, 129);
             this.Controls.Add(this.mainTableLayoutPanel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(400, 168);
             this.Name = "MainProcess";

@@ -31,5 +31,17 @@ namespace DragEncrypt.Properties {
                 return ((string)(this["Extension"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SafelyDeleteFiles {
+            get {
+                return ((bool)(this["SafelyDeleteFiles"]));
+            }
+            set {
+                this["SafelyDeleteFiles"] = value;
+            }
+        }
     }
 }

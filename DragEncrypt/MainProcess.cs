@@ -14,6 +14,7 @@ namespace DragEncrypt
         public MainProcess(string fileLocation)
         {
             InitializeComponent();
+            deleteFileCheckBox.Checked = Settings.Default.SafelyDeleteFiles;
             EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) ? PickTargetFile() : new FileInfo(fileLocation);
         }
 
@@ -26,23 +27,34 @@ namespace DragEncrypt
                 {
                     if (_encryptedFileInfo != null) return;
                     submitButton.Enabled = false;
+                    optionsGroupBox.Enabled = false;
                     filePathLabel.Text = "";
                 }
                 else
                 {
                     _encryptedFileInfo = value;
                     submitButton.Enabled = true;
+                    optionsGroupBox.Enabled = true;
                     filePathLabel.Text = _encryptedFileInfo.FullName;
-                    ChangeSubmitButtonText();
+                    SwapEncryptDecryptFeatures();
                 }
             }
         }
 
-        private void ChangeSubmitButtonText()
+        private void SwapEncryptDecryptFeatures()
         {
-            submitButton.Text = FileCryptographer.IsEncrypted(EncryptedFileInfo)
-                ? Resources.MainProcess_MainProcess_Decrypt
-                : Resources.MainProcess_MainProcess_Encrypt;
+            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            {
+                // options
+                deleteFileCheckBox.Enabled = false;
+                // submit button text
+                submitButton.Text = Resources.MainProcess_MainProcess_Decrypt;
+            }
+            else
+            {
+                deleteFileCheckBox.Enabled = true;
+                submitButton.Text = Resources.MainProcess_MainProcess_Encrypt;
+            }
         }
 
         private static FileInfo PickTargetFile()
@@ -162,6 +174,12 @@ namespace DragEncrypt
         {
             MessageBox.Show(e.ToString());
             return true;
+        }
+
+        private void deleteFileCheckBox_CheckStateChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SafelyDeleteFiles = deleteFileCheckBox.Checked;
+            Settings.Default.Save();
         }
     }
 }
