@@ -14,6 +14,7 @@ namespace DragEncrypt
         public MainProcess(string fileLocation)
         {
             InitializeComponent();
+            Icon = Resources.DrawEncrypt;
             deleteFileCheckBox.Checked = Settings.Default.SafelyDeleteFiles;
             EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) ? PickTargetFile() : new FileInfo(fileLocation);
         }
