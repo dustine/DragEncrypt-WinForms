@@ -148,6 +148,8 @@ namespace DragEncrypt
         public static FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
         {
             if (originalFile == null) throw new ArgumentNullException("originalFile");
+            if (!originalFile.Exists) throw new ArgumentException("originalFile points to a non-existant file");
+            if (Directory.Exists(originalFile.FullName)) throw new ArgumentException("originalFile points to a folder, not a file");
             // ready encryption hashedKey and info
             var info = new EncryptionInfo
             {

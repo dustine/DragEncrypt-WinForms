@@ -36,9 +36,18 @@ namespace DragEncrypt.Tests
         [TearDown]
         public void TearDown()
         {
-            foreach (var file in Directory.EnumerateFiles(TestDirectory))
+            EraseDirectory(TestDirectory);
+        }
+
+        private static void EraseDirectory(string directory)
+        {
+            foreach (var file in Directory.EnumerateFiles(directory))
                 File.Delete(file);
-            Directory.Delete(TestDirectory);
+            foreach (var dir in Directory.EnumerateDirectories(directory))
+            {
+                EraseDirectory(dir);
+            }
+            Directory.Delete(directory);
         }
 
         [Test]
@@ -324,7 +333,19 @@ namespace DragEncrypt.Tests
             // assertion
             FileAssert.AreEqual(_originalFile, _decryptedFile); // hah lol
         }
-    
-        
+
+        [Test]
+        [ExpectedException(typeof (ArgumentException))]
+        public void Encrypt_IsDirectory_ArgumentException()
+        {
+            // arrange
+            var _newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");
+            _originalFile = new FileInfo(_newDirectory.FullName);
+
+            // action
+            _encryptedFile = FileCryptographer.EncryptFile(_originalFile,"");
+
+            // assertion
+        }
     }
 }

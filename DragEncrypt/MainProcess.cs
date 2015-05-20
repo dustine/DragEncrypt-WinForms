@@ -16,7 +16,7 @@ namespace DragEncrypt
             InitializeComponent();
             Icon = Resources.DrawEncrypt;
             deleteFileCheckBox.Checked = Settings.Default.SafelyDeleteFiles;
-            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) ? null : new FileInfo(fileLocation);
+            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) || Directory.Exists(fileLocation) ? null : new FileInfo(fileLocation);
         }
 
         private FileInfo EncryptedFileInfo
@@ -27,23 +27,29 @@ namespace DragEncrypt
                 if (value == null)
                 {
                     if (_encryptedFileInfo != null) return;
-                    submitButton.Enabled = false;
-                    optionsGroupBox.Enabled = false;
-                    filePathLabel.Text = "";
+                    UnknownFunctionFeatures();
                 }
                 else
                 {
                     _encryptedFileInfo = value;
-                    submitButton.Enabled = true;
-                    optionsGroupBox.Enabled = true;
-                    filePathLabel.Text = _encryptedFileInfo.FullName;
                     SwapEncryptDecryptFeatures();
                 }
             }
         }
 
+        private void UnknownFunctionFeatures()
+        {
+            submitButton.Enabled = false;
+            optionsGroupBox.Enabled = false;
+            filePathLabel.Text = "";
+        }
+
         private void SwapEncryptDecryptFeatures()
         {
+            submitButton.Enabled = true;
+            optionsGroupBox.Enabled = true;
+            filePathLabel.Text = _encryptedFileInfo.FullName;
+
             if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
             {
                 // options
@@ -149,6 +155,11 @@ namespace DragEncrypt
             showPasswordHoldButton.BackColor = SystemColors.WindowText;
             showPasswordHoldButton.Image = Resources.white_eye16;
             passwordBox.UseSystemPasswordChar = false;
+        }
+
+        private void showPasswordHoldButton_Click(object sender, EventArgs e)
+        {
+            ShowPassword();
         }
 
         private void showPasswordHoldButton_KeyDown(object sender, KeyEventArgs e)
