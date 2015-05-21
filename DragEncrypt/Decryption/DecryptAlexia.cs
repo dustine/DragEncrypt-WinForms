@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using DragEncrypt.Properties;
 using Newtonsoft.Json;
 
 namespace DragEncrypt.Decryption
@@ -203,6 +204,11 @@ namespace DragEncrypt.Decryption
                 encryptedPortionLength = position;
             }
             return encryptedPortionLength;
+        }
+
+        public bool IsEncrypted(FileSystemInfo target)
+        {
+            return target.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }
