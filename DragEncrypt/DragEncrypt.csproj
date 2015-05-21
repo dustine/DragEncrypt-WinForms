@@ -69,6 +69,7 @@
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Core.cs" />
     <Compile Include="DecryptAesCbc.cs" />
     <Compile Include="EncryptionInfo.cs" />
     <Compile Include="FileCryptographer.cs" />

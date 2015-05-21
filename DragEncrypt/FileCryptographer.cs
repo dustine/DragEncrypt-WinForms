@@ -13,12 +13,10 @@ namespace DragEncrypt
 {
     public static class FileCryptographer
     {
-        //public string Key { private get; set; }
-
         /// <summary>
-        ///     Checks if the file fi is already encrypted or not
+        ///     Checks if the file <paramref name="fi"/> is already encrypted or not.
         /// </summary>
-        /// <param name="fi"></param>
+        /// <param name="fi">Targetted file</param>
         /// <returns></returns>
         public static bool IsEncrypted(FileSystemInfo fi)
         {
@@ -26,14 +24,14 @@ namespace DragEncrypt
         }
 
         /// <summary>
-        ///     Tries to decrypt the file fi, using the private hashed hashedKey
+        ///     Tries to decrypt the file <paramref name="encryptedFile"/>, using the private hashed hashedKey
         /// </summary>
         /// <param name="encryptedFile"></param>
         /// <param name="key"></param>
         public static FileInfo DecryptFile(FileInfo encryptedFile, string key)
         {
-            if (encryptedFile == null) throw new ArgumentNullException("encryptedFile");
-            if (key == null) throw new ArgumentNullException("key");
+            if (encryptedFile == null) throw new ArgumentNullException(nameof(encryptedFile));
+            if (key == null) throw new ArgumentNullException(nameof(key));
             // ready encryption hashedKey and info
             EncryptionInfo info;
             // obtaining original json header
@@ -47,15 +45,12 @@ namespace DragEncrypt
 
             // decrypting the file
             // prevent conflict with any existing file
-            var newFile = GetNonCollidingFile(encryptedFile.FullName.Substring(0,
-                encryptedFile.FullName.Length - Settings.Default.Extension.Length));
+            var newFile = Core.GetNonCollidingFile(Core.GetFilenameWithoutExtension(encryptedFile));
             using (var tempFiles = new TempFileInfoGenerator())
             {
                 var zippedFile = tempFiles.CreateFile();
-
                 // find the "end" of the JSON header
                 var encryptedPortionLength = SeekEndOfJsonHeader(encryptedFile);
-
                 // decrypting to temporary gzipped file
                 using (var encryptedFs = encryptedFile.OpenRead())
                 using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
@@ -78,7 +73,7 @@ namespace DragEncrypt
                 }
 
                 // delete hashed key
-                ShallowEraseList(hashedKey);
+                Core.ShallowEraseList(hashedKey);
 
                 // unzip from the temporary file into the final permanent file
                 using (var zippedFs = zippedFile.OpenRead())
@@ -97,21 +92,7 @@ namespace DragEncrypt
             throw new CryptographicException("Result hash does not match initial hash");
         }
 
-        // TODO: Prevent infinite loop if a match is never found (somehow)
-        private static FileInfo GetNonCollidingFile(string fileProposal)
-        {
-            var conflictFile = new FileInfo(fileProposal);
-            if (!conflictFile.Exists) return conflictFile;
-            for (var i = 1;; i++)
-            {
-                var target = String.Format("{0}/{1} ({2}){3}", conflictFile.DirectoryName,
-                    conflictFile.Name.Substring(0, conflictFile.Name.Length - conflictFile.Extension.Length), i,
-                    conflictFile.Extension);
-                if (!File.Exists(target)) return new FileInfo(target);
-            }
-        }
-
-        internal static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
+        private static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
         {
             // TODO: Make this unhackish again
             long encryptedPortionLength;
@@ -147,9 +128,9 @@ namespace DragEncrypt
         /// <param name="deleteOriginalSafely"></param>
         public static FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
         {
-            if (originalFile == null) throw new ArgumentNullException("originalFile");
-            if (!originalFile.Exists) throw new ArgumentException("originalFile points to a non-existant file");
-            if (Directory.Exists(originalFile.FullName)) throw new ArgumentException("originalFile points to a folder, not a file");
+            if (originalFile == null) throw new ArgumentNullException(nameof(originalFile));
+            if (!originalFile.Exists) throw new ArgumentException($"{nameof(originalFile)} points to a non-existant file");
+            if (Directory.Exists(originalFile.FullName)) throw new ArgumentException($"{nameof(originalFile)} points to a folder, not a file");
             // ready encryption hashedKey and info
             var info = new EncryptionInfo
             {
@@ -165,7 +146,7 @@ namespace DragEncrypt
 
             // hash original file
             var hash = Hash(originalFile, info.HashAlgorithm);
-            var newFile = GetNonCollidingFile(originalFile.FullName + Settings.Default.Extension);
+            var newFile = Core.GetNonCollidingFile(originalFile.FullName + Settings.Default.Extension);
 
             // encrypt original file with info header in the start
             using (var tempFiles = new TempFileInfoGenerator())
@@ -205,7 +186,7 @@ namespace DragEncrypt
                 }
 
                 // delete hashed key
-                ShallowEraseList(hashedKey);
+                Core.ShallowEraseList(hashedKey);
 
                 // safely delete the zipped file, as it shouldn't stay in the OS like that
                 SafeOverwriteFile(zippedFile);
@@ -217,13 +198,6 @@ namespace DragEncrypt
             SafeOverwriteFile(originalFile);
             originalFile.Delete();
             return newFile;
-        }
-
-        internal static void ShallowEraseList<T>(IList<T> bytes)
-        {
-            if (bytes == null) return;
-            for (var i = 0; i < bytes.Count; i++)
-                bytes[i] = default(T);
         }
 
         /// <summary>

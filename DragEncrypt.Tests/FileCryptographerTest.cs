@@ -20,7 +20,7 @@ namespace DragEncrypt.Tests
         {
             Directory.CreateDirectory(TestDirectory);
 
-            _originalFile = new FileInfo(string.Format("{0}/{1}", TestDirectory, "originalFile"));
+            _originalFile = new FileInfo($"{TestDirectory}/originalFile");
             using (var originalFs = _originalFile.Open(FileMode.Create))
             {
                 var random = new Random();
@@ -144,6 +144,7 @@ namespace DragEncrypt.Tests
         {
             // arrange
             var conflictFile = new FileInfo(TestDirectory + _originalFile.Name + Settings.Default.Extension);
+            // ReSharper disable once UnusedVariable
             using (var fs = conflictFile.Create())
             {
                 // action
@@ -339,8 +340,8 @@ namespace DragEncrypt.Tests
         public void Encrypt_IsDirectory_ArgumentException()
         {
             // arrange
-            var _newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");
-            _originalFile = new FileInfo(_newDirectory.FullName);
+            var newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");
+            _originalFile = new FileInfo(newDirectory.FullName);
 
             // action
             _encryptedFile = FileCryptographer.EncryptFile(_originalFile,"");
