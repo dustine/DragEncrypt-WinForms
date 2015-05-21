@@ -1,25 +1,41 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
+using DragEncrypt.Decryption;
 using DragEncrypt.Properties;
 using Newtonsoft.Json;
 
 namespace DragEncrypt
 {
-    public static class FileCryptographer
+    public class FileCryptographer
     {
-        /// <summary>
-        ///     Checks if the file <paramref name="fi"/> is already encrypted or not.
-        /// </summary>
-        /// <param name="fi">Targetted file</param>
-        /// <returns></returns>
-        public static bool IsEncrypted(FileSystemInfo fi)
+        #region Singleton usage FileCryptographer.Instance 
+
+        static FileCryptographer()
         {
-            return fi.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
+
+        private FileCryptographer()
+        {
+            DecryptionAlgorithms = AppDomain
+                .CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => typeof(IDecryptionAlgorithm).IsAssignableFrom(t))
+                .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface);
+        }
+
+        public IEnumerable<Type> DecryptionAlgorithms { get; set; }
+
+        public static FileCryptographer Instance { get; } = new FileCryptographer();
+
+        #endregion
 
         /// <summary>
         ///     Tries to decrypt the file <paramref name="encryptedFile"/>, using the private hashed hashedKey
