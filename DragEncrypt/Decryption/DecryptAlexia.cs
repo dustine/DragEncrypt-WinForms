@@ -13,7 +13,7 @@ namespace DragEncrypt.Decryption
     /// </summary>
     public class DecryptAlexia : IDecryptionAlgorithm
     {
-        DecryptAlexia()
+        public DecryptAlexia()
         {
             TempFileGenerator = new SecureTempFileGenerator("", "tmp");
         }

@@ -27,7 +27,7 @@ namespace DragEncrypt
             Extension = extension;
         }
 
-        public string Extension { get; private set; }
+        public string Extension { get; internal set; }
 
         public void Dispose()
         {

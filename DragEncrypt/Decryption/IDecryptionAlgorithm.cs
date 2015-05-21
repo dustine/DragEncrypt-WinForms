@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DragEncrypt.Decryption
 {
-    internal interface IDecryptionAlgorithm
+    public interface IDecryptionAlgorithm
     {
         Version TargettedVersion { get; }
         byte[] HashKey(string key, EncryptionInfo info);
