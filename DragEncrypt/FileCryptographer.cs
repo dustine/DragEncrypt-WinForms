@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -45,7 +44,7 @@ namespace DragEncrypt
             // decrypting the file
             // prevent conflict with any existing file
             var newFile = Core.GetNonCollidingFile(Core.GetFilenameWithoutExtension(encryptedFile));
-            using (var tempFiles = new TempFileInfoGenerator())
+            using (var tempFiles = new TempFileGenerator())
             {
                 var zippedFile = tempFiles.CreateFile();
                 // find the "end" of the JSON header
@@ -55,7 +54,7 @@ namespace DragEncrypt
                 using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
                 {
                     // loading cryptography parameters
-                    Debug.Assert(crypter != null, "crypter != null");
+                    //Debug.Assert(crypter != null, "crypter != null");
                     crypter.KeySize = info.KeySize;
                     crypter.BlockSize = info.BlockSize;
                     crypter.Key = hashedKey;
@@ -81,7 +80,7 @@ namespace DragEncrypt
                     zipper.CopyTo(newFs);
 
                 // safely delete the zipped file, as it shouldn't stay in the OS like that
-                SafeOverwriteFile(zippedFile);
+                Core.SafeOverwriteFile(zippedFile);
                 zippedFile.Delete();
             }
             // check the hash of the final product, must match to the hash stored in the header
@@ -148,7 +147,7 @@ namespace DragEncrypt
             var newFile = Core.GetNonCollidingFile(originalFile.FullName + Settings.Default.Extension);
 
             // encrypt original file with info header in the start
-            using (var tempFiles = new TempFileInfoGenerator())
+            using (var tempFiles = new TempFileGenerator())
             using (var crypter = new AesCryptoServiceProvider())
             {
                 // load hashedKey and IV into cryptography service
@@ -188,13 +187,13 @@ namespace DragEncrypt
                 Core.ShallowEraseList(hashedKey);
 
                 // safely delete the zipped file, as it shouldn't stay in the OS like that
-                SafeOverwriteFile(zippedFile);
+                Core.SafeOverwriteFile(zippedFile);
                 zippedFile.Delete();
             }
 
             // safe deleting of the original file
             if (!deleteOriginalSafely) return newFile;
-            SafeOverwriteFile(originalFile);
+            Core.SafeOverwriteFile(originalFile);
             originalFile.Delete();
             return newFile;
         }
@@ -210,7 +209,7 @@ namespace DragEncrypt
             using (var fs = file.OpenRead())
             using (var hasher = Activator.CreateInstance(hashAlgorithm) as HashAlgorithm)
             {
-                Debug.Assert(hasher != null, "hasher != null");
+                //Debug.Assert(hasher != null, "hasher != null");
                 var hash = hasher.ComputeHash(fs);
                 var sb = new StringBuilder();
                 foreach (var b in hash)
@@ -227,18 +226,6 @@ namespace DragEncrypt
 
             hashedKey = keyGen.GetBytes(info.KeySize/8);
             info.Salt = keyGen.Salt;
-        }
-
-        internal static void SafeOverwriteFile(FileInfo file)
-        {
-            var buffer = new byte[1024/8];
-            for (var i = buffer.Length - 1; i >= 0; i--)
-                buffer[i] = 0;
-            using (var fs = file.OpenWrite())
-            {
-                for (var i = file.Length/buffer.Length; i >= 0; i--)
-                    fs.Write(buffer, 0, buffer.Length);
-            }
         }
     }
 }

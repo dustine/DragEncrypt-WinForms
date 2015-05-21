@@ -55,7 +55,7 @@ namespace DragEncrypt.Tests
         {
             //arrange
             //action
-            FileCryptographer.SafeOverwriteFile(_originalFile);
+            Core.SafeOverwriteFile(_originalFile);
             //assert
             Assert.GreaterOrEqual(_originalFile.Length, _originalFile.Length);
         }
@@ -65,7 +65,7 @@ namespace DragEncrypt.Tests
         {
             //arrange
             //action
-            FileCryptographer.SafeOverwriteFile(_originalFile);
+            Core.SafeOverwriteFile(_originalFile);
             //assert
             using (var fs = _originalFile.OpenRead())
             {

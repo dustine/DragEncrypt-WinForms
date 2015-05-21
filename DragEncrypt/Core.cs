@@ -41,5 +41,17 @@ namespace DragEncrypt
             for (var i = 0; i < bytes.Count; i++)
                 bytes[i] = default(T);
         }
+
+        public static void SafeOverwriteFile(FileInfo file)
+        {
+            var buffer = new byte[1024/8];
+            for (var i = buffer.Length - 1; i >= 0; i--)
+                buffer[i] = 0;
+            using (var fs = file.OpenWrite())
+            {
+                for (var i = file.Length/buffer.Length; i >= 0; i--)
+                    fs.Write(buffer, 0, buffer.Length);
+            }
+        }
     }
 }
