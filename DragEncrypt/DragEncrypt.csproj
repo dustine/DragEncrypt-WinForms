@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -23,7 +24,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -71,9 +72,9 @@
     </Compile>
     <Compile Include="Core.cs" />
     <Compile Include="DecryptAesCbc.cs" />
+    <Compile Include="Decryption\IDecryptionAlgorithm.cs" />
     <Compile Include="EncryptionInfo.cs" />
     <Compile Include="FileCryptographer.cs" />
-    <Compile Include="IDecryptionAlgorithm.cs" />
     <Compile Include="PathLabel.cs">
       <SubType>Component</SubType>
     </Compile>
