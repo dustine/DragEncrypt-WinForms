@@ -37,7 +37,7 @@ namespace DragEncrypt.Decryption
         {
             return new EncryptionInfo
             {
-                Version = "1.0.0.0",
+                Version = TargettedVersion.ToString(),
                 EncryptionAlgorithm = typeof(AesCryptoServiceProvider),
                 HashAlgorithm = typeof(SHA256CryptoServiceProvider),
                 KeySize = 256,
