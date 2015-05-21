@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -27,11 +28,13 @@ namespace DragEncrypt
                 .CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => typeof(IDecryptionAlgorithm).IsAssignableFrom(t))
-                .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface);
+                .Where(t => typeof (IDecryptionAlgorithm).IsAssignableFrom(t)
+                            && t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface)
+                .Select(t => (IDecryptionAlgorithm) Activator.CreateInstance(t))
+            ;
         }
 
-        public IEnumerable<Type> DecryptionAlgorithms { get; set; }
+        public IEnumerable<IDecryptionAlgorithm> DecryptionAlgorithms { get; set; }
 
         public static FileCryptographer Instance { get; } = new FileCryptographer();
 
