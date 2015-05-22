@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DragEncrypt.Decryption;
 using DragEncrypt.Properties;
 
 namespace DragEncrypt
@@ -14,10 +15,13 @@ namespace DragEncrypt
         public MainProcess(string fileLocation)
         {
             InitializeComponent();
+            FileCryptographer = new FileCryptographer(new Version(Application.ProductVersion));
             Icon = Resources.DrawEncrypt;
             deleteFileCheckBox.Checked = Settings.Default.SafelyDeleteFiles;
-            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) || Directory.Exists(fileLocation) ? null : new FileInfo(fileLocation);
+            EncryptedFileInfo = string.IsNullOrWhiteSpace(fileLocation) || Directory.Exists(fileLocation) ? null : new FileInfo(fileLocation);
         }
+
+        public FileCryptographer FileCryptographer { get; set; }
 
         private FileInfo EncryptedFileInfo
         {
@@ -50,7 +54,7 @@ namespace DragEncrypt
             optionsGroupBox.Enabled = true;
             filePathLabel.Text = _encryptedFileInfo.FullName;
 
-            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.CurrentAlgorithm.IsEncrypted(EncryptedFileInfo))
             {
                 // options
                 deleteFileCheckBox.Enabled = false;
@@ -124,14 +128,14 @@ namespace DragEncrypt
             var key = passwordBox.Text;
             passwordBox.Text = null;
 
-            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.CurrentAlgorithm.IsEncrypted(EncryptedFileInfo))
             {
                 Task.Factory.StartNew(
                     () =>
                         FileCryptographer.DecryptFile(EncryptedFileInfo, key))
                     .ContinueWith(task =>
                     {
-                        if (task.Exception != null) task.Exception.Handle(Error);
+                        task.Exception?.Handle(Error);
                         key = null;
                         Close();
                     }, ts);
@@ -143,7 +147,7 @@ namespace DragEncrypt
                         FileCryptographer.EncryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
                     .ContinueWith(task =>
                     {
-                        if (task.Exception != null) task.Exception.Handle(Error);
+                        task.Exception?.Handle(Error);
                         key = null;
                         Close();
                     }, ts);

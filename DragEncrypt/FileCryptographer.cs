@@ -16,29 +16,27 @@ namespace DragEncrypt
 {
     public class FileCryptographer
     {
-        #region Singleton usage FileCryptographer.Instance 
 
-        static FileCryptographer()
-        {
-        }
-
-        private FileCryptographer()
+        public FileCryptographer(Version currentVersion)
         {
             DecryptionAlgorithms = AppDomain
                 .CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => typeof (IDecryptionAlgorithm).IsAssignableFrom(t)
-                            && t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface)
-                .Select(t => (IDecryptionAlgorithm) Activator.CreateInstance(t))
-            ;
+                .Where(t => typeof (IDecryptionAlgorithm).IsAssignableFrom(t))
+                .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface)
+                .Select(t => (IDecryptionAlgorithm)Activator.CreateInstance(t));
+
+            CurrentAlgorithm = DecryptionAlgorithms.First(a =>
+            {
+                return a.TargettedVersion.Major == currentVersion.Major &&
+                       a.TargettedVersion.Minor == currentVersion.Minor;
+            });
         }
 
-        public IEnumerable<IDecryptionAlgorithm> DecryptionAlgorithms { get; set; }
+        public IDecryptionAlgorithm CurrentAlgorithm { get; private set; }
 
-        public static FileCryptographer Instance { get; } = new FileCryptographer();
-
-        #endregion
+        public IEnumerable<IDecryptionAlgorithm> DecryptionAlgorithms { get; private set; }
 
         /// <summary>
         ///     Tries to decrypt the file <paramref name="encryptedFile"/>, using the private hashed hashedKey
