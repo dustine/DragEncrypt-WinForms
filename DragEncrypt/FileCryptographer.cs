@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -25,13 +24,11 @@ namespace DragEncrypt
                 .SelectMany(a => a.GetTypes())
                 .Where(t => typeof (IDecryptionAlgorithm).IsAssignableFrom(t))
                 .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition && !t.IsInterface)
-                .Select(t => (IDecryptionAlgorithm)Activator.CreateInstance(t));
+                .Select(t => (IDecryptionAlgorithm) Activator.CreateInstance(t))
+                .OrderByDescending(a => new Tuple<int, int>(a.TargettedVersion.Major, a.TargettedVersion.Minor));
 
-            CurrentAlgorithm = DecryptionAlgorithms.First(a =>
-            {
-                return a.TargettedVersion.Major == currentVersion.Major &&
-                       a.TargettedVersion.Minor == currentVersion.Minor;
-            });
+            CurrentAlgorithm = DecryptionAlgorithms.First(a => a.TargettedVersion.Major == currentVersion.Major &&
+                                                               a.TargettedVersion.Minor == currentVersion.Minor);
         }
 
         public IDecryptionAlgorithm CurrentAlgorithm { get; private set; }
