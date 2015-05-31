@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace DragEncrypt.Decryption
+namespace DragEncrypt.Algorithm
 {
-    public interface IDecryptionAlgorithm
+    public interface ICryptographyAlgorithm
     {
         Version TargettedVersion { get; }
         byte[] HashKey(string key, EncryptionInfo info);

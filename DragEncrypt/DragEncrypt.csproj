@@ -71,8 +71,8 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Core.cs" />
-    <Compile Include="Decryption\DecryptAlexia.cs" />
-    <Compile Include="Decryption\IDecryptionAlgorithm.cs" />
+    <Compile Include="Algorithm\Alexia.cs" />
+    <Compile Include="Algorithm\ICryptographyAlgorithm.cs" />
     <Compile Include="EncryptionInfo.cs" />
     <Compile Include="FileCryptographer.cs" />
     <Compile Include="PathLabel.cs">

@@ -3,7 +3,6 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using DragEncrypt.Decryption;
 using DragEncrypt.Properties;
 
 namespace DragEncrypt

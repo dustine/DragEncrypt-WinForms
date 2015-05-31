@@ -5,18 +5,14 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace DragEncrypt.Decryption
+namespace DragEncrypt.Algorithm
 {
     /// <summary>
     /// The zipped encryption version, where the files created by it all have the 1.0.0.0 version.
     /// </summary>
-    public class DecryptAlexia : IDecryptionAlgorithm
+    // ReSharper disable once UnusedMember.Global
+    public class Alexia : ICryptographyAlgorithm
     {
-        public DecryptAlexia()
-        {
-            //TempFileGenerator = new SecureTempFileGenerator("", "tmp");
-        }
-
         //private SecureTempFileGenerator TempFileGenerator { get; }
         public Version TargettedVersion { get; } = new Version(1,0,0);
 
@@ -69,6 +65,7 @@ namespace DragEncrypt.Decryption
                 var zipped = Deflate(originalFile, generator.CreateFile());
                 // encrypt
                 encrypted = Encrypt(zipped, hashedKey, info, encrypted);
+                Core.ShallowEraseList(hashedKey);
                 // delete temp files; generator takes care of that thanks to the using()
             }
             return encrypted;
@@ -79,13 +76,14 @@ namespace DragEncrypt.Decryption
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get target file
-            var decrypted = new FileInfo(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name));
+            var decrypted = new FileInfo(Core.GetNonCollidingFile(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name)));
 
             using (var generator = new SecureTempFileGenerator())
             {
-                // zip (deflate)
+                // decrypt
                 var zipped = Decrypt(encrypted, hashedKey, info, generator.CreateFile());
-                // encrypt
+                Core.ShallowEraseList(hashedKey);
+                // inflate (unzip)
                 decrypted = Inflate(zipped, decrypted);
                 // delete temp files; generator takes care of that thanks to the using()
             }
@@ -116,7 +114,7 @@ namespace DragEncrypt.Decryption
         private FileInfo Inflate(FileInfo deflated, FileInfo target)
         { 
             // unzip from the temporary file into the final permanent file
-            using (var deflatedFs = ((FileInfo)deflated).OpenRead())
+            using (var deflatedFs = deflated.OpenRead())
             using (var newFs = target.Open(FileMode.Create, FileAccess.Write))
             using (var zipper = new GZipStream(deflatedFs, CompressionMode.Decompress))
                 zipper.CopyTo(newFs);
