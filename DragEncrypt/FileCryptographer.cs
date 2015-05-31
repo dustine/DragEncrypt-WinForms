@@ -18,7 +18,7 @@ namespace DragEncrypt
 
         public FileCryptographer(Version currentVersion)
         {
-            DecryptionAlgorithms = AppDomain
+            Algorithms = AppDomain
                 .CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => a.GetTypes())
@@ -27,20 +27,20 @@ namespace DragEncrypt
                 .Select(t => (ICryptographyAlgorithm) Activator.CreateInstance(t))
                 .OrderByDescending(a => new Tuple<int, int>(a.TargettedVersion.Major, a.TargettedVersion.Minor));
 
-            CurrentAlgorithm = DecryptionAlgorithms.First(a => a.TargettedVersion.Major == currentVersion.Major &&
+            CurrentAlgorithm = Algorithms.First(a => a.TargettedVersion.Major == currentVersion.Major &&
                                                                a.TargettedVersion.Minor == currentVersion.Minor);
         }
 
-        public ICryptographyAlgorithm CurrentAlgorithm { get; private set; }
+        public ICryptographyAlgorithm CurrentAlgorithm { get; }
 
-        public IEnumerable<ICryptographyAlgorithm> DecryptionAlgorithms { get; private set; }
+        public IEnumerable<ICryptographyAlgorithm> Algorithms { get; }
 
         /// <summary>
         ///     Tries to decrypt the file <paramref name="encryptedFile"/>, using the private hashed hashedKey
         /// </summary>
         /// <param name="encryptedFile"></param>
         /// <param name="key"></param>
-        public FileSystemInfo DecryptFile(FileInfo encryptedFile, string key)
+        public FileSystemInfo Decrypt(FileInfo encryptedFile, string key)
         {
             if (encryptedFile == null) throw new ArgumentNullException(nameof(encryptedFile));
             if (!encryptedFile.Exists) throw new FileNotFoundException(encryptedFile.FullName);
@@ -48,7 +48,7 @@ namespace DragEncrypt
             // ready encryption hashedKey and info
             EncryptionInfo info = null;
             // obtaining original header
-            foreach (var da in DecryptionAlgorithms)
+            foreach (var da in Algorithms)
             {
                 try
                 {
@@ -70,7 +70,7 @@ namespace DragEncrypt
             // finding decryption algorithm
             var targetVersion = new Version(info.Version);
             var algorithm =
-                DecryptionAlgorithms.FirstOrDefault(a => a.TargettedVersion.Major == targetVersion.Major &&
+                Algorithms.FirstOrDefault(a => a.TargettedVersion.Major == targetVersion.Major &&
                                                          a.TargettedVersion.Minor == targetVersion.Minor);
 
             // decrypting the file
@@ -83,7 +83,7 @@ namespace DragEncrypt
         /// <param name="original"></param>
         /// <param name="key"></param>
         /// <param name="deleteOriginalSafely"></param>
-        public FileInfo EncryptFile(FileSystemInfo original, string key, bool deleteOriginalSafely = false)
+        public FileInfo Encrypt(FileSystemInfo original, string key, bool deleteOriginalSafely = false)
         {
             if (original == null) throw new ArgumentNullException(nameof(original));
             if (!original.Exists) throw new FileNotFoundException(original.FullName);
@@ -115,36 +115,6 @@ namespace DragEncrypt
             {
                 Core.SafeOverwriteFile(enumerateFile);
             }
-        }
-
-        /// <summary>
-        ///     Hashes the given file under SHA256
-        /// </summary>
-        /// <param name="file">The file to obtain the fash from</param>
-        /// <param name="hashAlgorithm"></param>
-        /// <returns>The hash, written a sequence of hexadecimal digits duplets</returns>
-        internal static string Hash(FileInfo file, Type hashAlgorithm)
-        {
-            using (var fs = file.OpenRead())
-            using (var hasher = Activator.CreateInstance(hashAlgorithm) as HashAlgorithm)
-            {
-                //Debug.Assert(hasher != null, "hasher != null");
-                var hash = hasher.ComputeHash(fs);
-                var sb = new StringBuilder();
-                foreach (var b in hash)
-                    sb.AppendFormat("{0:x2}", b);
-                return sb.ToString();
-            }
-        }
-
-        internal static void EncryptKey(string key, EncryptionInfo info, out byte[] hashedKey)
-        {
-            var keyGen = info.Salt == null
-                ? new Rfc2898DeriveBytes(key, info.SaltSize/8)
-                : new Rfc2898DeriveBytes(key, info.Salt);
-
-            hashedKey = keyGen.GetBytes(info.KeySize/8);
-            info.Salt = keyGen.Salt;
         }
 
         public static bool IsEncrypted(FileSystemInfo target)

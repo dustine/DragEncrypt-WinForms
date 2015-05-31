@@ -70,6 +70,7 @@
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Algorithm\Bella.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Algorithm\Alexia.cs" />
     <Compile Include="Algorithm\ICryptographyAlgorithm.cs" />

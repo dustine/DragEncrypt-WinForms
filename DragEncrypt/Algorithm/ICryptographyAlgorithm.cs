@@ -11,5 +11,6 @@ namespace DragEncrypt.Algorithm
         FileInfo Encrypt(FileSystemInfo original, string key, EncryptionInfo info);
         FileSystemInfo Decrypt(FileInfo encrypted, string key, EncryptionInfo info);
         EncryptionInfo GetEncryptionInfo(FileInfo encrypted);
+        string Hash(FileInfo original, EncryptionInfo info);
     }
 }
