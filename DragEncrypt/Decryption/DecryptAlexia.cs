@@ -3,34 +3,31 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
-using DragEncrypt.Properties;
 using Newtonsoft.Json;
 
 namespace DragEncrypt.Decryption
 {
     /// <summary>
-    /// The original encryption version, where the files created by it all have the 1.0.0.0 version.
+    /// The zipped encryption version, where the files created by it all have the 1.0.0.0 version.
     /// </summary>
     public class DecryptAlexia : IDecryptionAlgorithm
     {
         public DecryptAlexia()
         {
-            TempFileGenerator = new SecureTempFileGenerator("", "tmp");
+            //TempFileGenerator = new SecureTempFileGenerator("", "tmp");
         }
 
-        private TempFileGenerator TempFileGenerator { get; }
+        //private SecureTempFileGenerator TempFileGenerator { get; }
         public Version TargettedVersion { get; } = new Version(1,0,0);
-
-        private const int KeySize = 256;
-        private const int SaltSize = 128;
 
         public byte[] HashKey(string key, EncryptionInfo info)
         {
-            byte[] salt;
-            var hashedKey = HashKey(key, out salt);
-            info.KeySize = KeySize;
-            info.SaltSize = SaltSize;
-            info.Salt = salt;
+            var keyGen = info.Salt == null
+                ? new Rfc2898DeriveBytes(key, info.SaltSize / 8)
+                : new Rfc2898DeriveBytes(key, info.Salt);
+
+            var hashedKey = keyGen.GetBytes(info.KeySize / 8);
+            info.Salt = keyGen.Salt;
             return hashedKey;
         }
 
@@ -39,51 +36,97 @@ namespace DragEncrypt.Decryption
             return new EncryptionInfo
             {
                 Version = TargettedVersion.ToString(),
-                EncryptionAlgorithm = typeof(AesCryptoServiceProvider),
                 HashAlgorithm = typeof(SHA256CryptoServiceProvider),
+                EncryptionAlgorithm = typeof(AesCryptoServiceProvider),
                 KeySize = 256,
                 BlockSize = 128,
                 SaltSize = 128
             };
         }
 
-        public FileSystemInfo Deflate(FileSystemInfo original)
+        // ReSharper disable once RedundantAssignment
+        public FileInfo Encrypt(FileSystemInfo original, string key, EncryptionInfo info)
+        {
+            // argument testing
+            //if (zipped.Attributes.HasFlag(FileAttributes.Directory))
+            //    throw new ArgumentException($"{TargettedVersion} cannot deflate directories");
+            var originalFile = original as FileInfo;
+            if(original == null)
+                // TODO(Dustine) Is this exception valid? Like, it feels it may be a catch-all
+                throw new ArgumentException($"{TargettedVersion} cannot deflate directories");
+
+            // setup: disregard zipped info
+            info = GetDefaultEncryptionInfo();
+            info.OriginalHash = Hash(originalFile, info);
+            // setup: hash key
+            var hashedKey = HashKey(key, info);
+            // setup: get target file
+            var encrypted = new FileInfo(original.FullName + Properties.Settings.Default.Extension);
+
+            using (var generator = new SecureTempFileGenerator())
+            {
+                // zip (deflate)
+                var zipped = Deflate(originalFile, generator.CreateFile());
+                // encrypt
+                encrypted = Encrypt(zipped, hashedKey, info, encrypted);
+                // delete temp files; generator takes care of that thanks to the using()
+            }
+            return encrypted;
+        }
+
+        public FileSystemInfo Decrypt(FileInfo encrypted, string key, EncryptionInfo info)
+        {
+            // setup: hash key
+            var hashedKey = HashKey(key, info);
+            // setup: get target file
+            var decrypted = new FileInfo(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name));
+
+            using (var generator = new SecureTempFileGenerator())
+            {
+                // zip (deflate)
+                var zipped = Decrypt(encrypted, hashedKey, info, generator.CreateFile());
+                // encrypt
+                decrypted = Inflate(zipped, decrypted);
+                // delete temp files; generator takes care of that thanks to the using()
+            }
+            // test hash
+            if (!string.Equals(info.OriginalHash, Hash(decrypted, info)))
+            {
+                throw new CryptographicException("Hash of unencrypted file does not match hash from original file");
+            }
+            return decrypted;
+        }
+
+        private FileInfo Deflate(FileInfo original, FileInfo target)
         {
             if(original.Attributes.HasFlag(FileAttributes.Directory))
                 throw new ArgumentException($"{TargettedVersion} cannot deflate directories");
 
             var originalFile = new FileInfo(original.FullName);
-            var zipped = TempFileGenerator.CreateFile();
 
-            // zip original file into temporary deflated file
-            using (var zippedFs = zipped.OpenWrite())
+            // zip zipped file into temporary deflated file
+            using (var zippedFs = target.OpenWrite())
             using (var zipper = new GZipStream(zippedFs, CompressionMode.Compress))
             using (var originalFs = originalFile.OpenRead())
                 originalFs.CopyTo(zipper);
 
-            return zipped;
+            return target;
         }
 
-        public FileSystemInfo Inflate(FileSystemInfo deflated)
-        {
-            var inflated = TempFileGenerator.CreateFile();
-
+        private FileInfo Inflate(FileInfo deflated, FileInfo target)
+        { 
             // unzip from the temporary file into the final permanent file
             using (var deflatedFs = ((FileInfo)deflated).OpenRead())
-            using (var newFs = inflated.Open(FileMode.Create, FileAccess.Write))
+            using (var newFs = target.Open(FileMode.Create, FileAccess.Write))
             using (var zipper = new GZipStream(deflatedFs, CompressionMode.Decompress))
                 zipper.CopyTo(newFs);
 
-            return inflated;
+            return target;
         }
 
-        public FileSystemInfo Encrypt(FileSystemInfo original, byte[] hashedKey, EncryptionInfo info)
+        private FileInfo Encrypt(FileInfo zipped, byte[] hashedKey, EncryptionInfo info, FileInfo target)
         {
-            if (original.Attributes.HasFlag(FileAttributes.Directory))
-                throw new ArgumentException($"{TargettedVersion} cannot deflate directories");
-
-            var originalFile = new FileInfo(original.FullName);
-            var newFile = TempFileGenerator.CreateFile();
+            var originalFile = new FileInfo(zipped.FullName);
 
             using (var crypter = new AesCryptoServiceProvider())
             {
@@ -95,26 +138,26 @@ namespace DragEncrypt.Decryption
                 info.Iv = crypter.IV;
                 info.EncryptionAlgorithm = typeof (AesCryptoServiceProvider);
 
-                using (var newFs = newFile.CreateText())
+                using (var targetFs = target.CreateText())
                 {
-                    newFs.Write(JsonConvert.SerializeObject(info));
+                    targetFs.Write(JsonConvert.SerializeObject(info));
                 }
 
                 // encrypt zipped file into final file, as an append
                 using (var originalFs = originalFile.OpenRead())
                 using (
                     var cs = new CryptoStream(originalFs, crypter.CreateEncryptor(), CryptoStreamMode.Read))
-                using (var newFs = newFile.Open(FileMode.Open, FileAccess.ReadWrite))
+                using (var targetFs = target.Open(FileMode.Open, FileAccess.ReadWrite))
                 {
-                    newFs.Seek(0, SeekOrigin.End);
-                    cs.CopyTo(newFs);
+                    targetFs.Seek(0, SeekOrigin.End);
+                    cs.CopyTo(targetFs);
                 }
             }
 
-            return newFile;
+            return target;
         }
 
-        public EncryptionInfo GetEncryptionInfo(FileSystemInfo encrypted)
+        public EncryptionInfo GetEncryptionInfo(FileInfo encrypted)
         {
             var encryptedFile = new FileInfo(encrypted.FullName);
 
@@ -125,15 +168,14 @@ namespace DragEncrypt.Decryption
             }
         }
 
-        public FileSystemInfo Decrypt(FileSystemInfo encrypted, byte[] hashedKey, EncryptionInfo info)
+        private FileInfo Decrypt(FileInfo encrypted, byte[] hashedKey, EncryptionInfo info, FileInfo target)
         {
-            var decrypted = TempFileGenerator.CreateFile();
             // find the "end" of the JSON header
             var encryptedFile = new FileInfo(encrypted.FullName);
             var encryptedPortionLength = SeekEndOfJsonHeader(encryptedFile);
             // decrypting to temporary gzipped file
             using (var encryptedFs = encryptedFile.OpenRead())
-            using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
+            using (var crypter = new AesCryptoServiceProvider())
             {
                 // loading cryptography parameters
                 //Debug.Assert(crypter != null, "crypter != null");
@@ -148,16 +190,16 @@ namespace DragEncrypt.Decryption
                 using (
                     var cs = new CryptoStream(encryptedFs, crypter.CreateDecryptor(),
                         CryptoStreamMode.Read))
-                using (var decryptedFs = decrypted.OpenWrite())
+                using (var decryptedFs = target.OpenWrite())
                     cs.CopyTo(decryptedFs);
             }
 
-            return decrypted;
+            return target;
         }
 
         public string Hash(FileInfo original, EncryptionInfo info)
         {
-            info.HashAlgorithm = typeof(SHA256CryptoServiceProvider);
+            //info.HashAlgorithm = typeof(SHA256CryptoServiceProvider);
 
             using (var fs = original.OpenRead())
             using (var hasher = new SHA256CryptoServiceProvider())
@@ -168,14 +210,6 @@ namespace DragEncrypt.Decryption
                     sb.AppendFormat("{0:x2}", b);
                 return sb.ToString();
             }
-        }
-
-        private static byte[] HashKey(string key, out byte[] salt)
-        {
-            var keyGen = new Rfc2898DeriveBytes(key, SaltSize/8);
-            var hashedKey = keyGen.GetBytes(KeySize/8);
-            salt = keyGen.Salt;
-            return hashedKey;
         }
 
         private static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
@@ -204,11 +238,6 @@ namespace DragEncrypt.Decryption
                 encryptedPortionLength = position;
             }
             return encryptedPortionLength;
-        }
-
-        public bool IsEncrypted(FileSystemInfo target)
-        {
-            return target.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

@@ -40,96 +40,54 @@ namespace DragEncrypt
         /// </summary>
         /// <param name="encryptedFile"></param>
         /// <param name="key"></param>
-        public static FileInfo DecryptFile(FileInfo encryptedFile, string key)
+        public FileSystemInfo DecryptFile(FileInfo encryptedFile, string key)
         {
             if (encryptedFile == null) throw new ArgumentNullException(nameof(encryptedFile));
+            if (!encryptedFile.Exists) throw new FileNotFoundException(encryptedFile.FullName);
             if (key == null) throw new ArgumentNullException(nameof(key));
             // ready encryption hashedKey and info
-            EncryptionInfo info;
-            // obtaining original json header
-            using (var encryptedFs = encryptedFile.OpenText())
+            EncryptionInfo info = null;
+            // obtaining original header
+            foreach (var da in DecryptionAlgorithms)
             {
-                var js = new JsonSerializer {CheckAdditionalContent = false};
-                info = (EncryptionInfo) js.Deserialize(encryptedFs, typeof (EncryptionInfo));
+                try
+                {
+                    info = da.GetEncryptionInfo(encryptedFile);
+                }
+                catch (IOException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    // ignored
+                }
+                if (info != null) break;
             }
-            byte[] hashedKey;
-            EncryptKey(key, info, out hashedKey);
+            // TODO(Dustine) Throw sensible exception (header can't be obtained)
+            if (info == null) return null;
+
+            // finding decryption algorithm
+            var targetVersion = new Version(info.Version);
+            var algorithm =
+                DecryptionAlgorithms.FirstOrDefault(a => a.TargettedVersion.Major == targetVersion.Major &&
+                                                         a.TargettedVersion.Minor == targetVersion.Minor);
 
             // decrypting the file
-            // prevent conflict with any existing file
-            var newFile = Core.GetNonCollidingFile(Core.GetFilenameWithoutExtension(encryptedFile));
-            using (var tempFiles = new TempFileGenerator())
+            var decrypted = algorithm.Decrypt(encryptedFile, key, info);
+            var decryptedFile = decrypted as FileInfo;
+            if (decryptedFile != null)
             {
-                var zippedFile = tempFiles.CreateFile();
-                // find the "end" of the JSON header
-                var encryptedPortionLength = SeekEndOfJsonHeader(encryptedFile);
-                // decrypting to temporary gzipped file
-                using (var encryptedFs = encryptedFile.OpenRead())
-                using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
-                {
-                    // loading cryptography parameters
-                    //Debug.Assert(crypter != null, "crypter != null");
-                    crypter.KeySize = info.KeySize;
-                    crypter.BlockSize = info.BlockSize;
-                    crypter.Key = hashedKey;
-                    crypter.IV = info.Iv;
-
-                    // readying the encrypted file stream to start reading after the json header
-                    encryptedFs.Seek(encryptedPortionLength, SeekOrigin.Begin);
-
-                    using (
-                        var cs = new CryptoStream(encryptedFs, crypter.CreateDecryptor(),
-                            CryptoStreamMode.Read))
-                    using (var zippedFileStream = zippedFile.OpenWrite())
-                        cs.CopyTo(zippedFileStream);
-                }
-
-                // delete hashed key
-                Core.ShallowEraseList(hashedKey);
-
-                // unzip from the temporary file into the final permanent file
-                using (var zippedFs = zippedFile.OpenRead())
-                using (var newFs = newFile.Open(FileMode.Create, FileAccess.Write))
-                using (var zipper = new GZipStream(zippedFs, CompressionMode.Decompress))
-                    zipper.CopyTo(newFs);
-
-                // safely delete the zipped file, as it shouldn't stay in the OS like that
-                Core.SafeOverwriteFile(zippedFile);
-                zippedFile.Delete();
-            }
-            // check the hash of the final product, must match to the hash stored in the header
-            var newHash = Hash(newFile, info.HashAlgorithm);
-            if (newHash.Equals(info.OriginalHash, StringComparison.CurrentCultureIgnoreCase))
+                var newFile = Core.GetNonCollidingFile(encryptedFile.DirectoryName + '/' + Core.GetFilenameWithoutExtension(encryptedFile));
+                File.Copy(decryptedFile.FullName, newFile.FullName);
+                Core.SafeOverwriteFile(decryptedFile);
                 return newFile;
-            throw new CryptographicException("Result hash does not match initial hash");
-        }
-
-        private static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
-        {
-            // TODO: Make this unhackish again
-            long encryptedPortionLength;
-            using (var encryptedTs = encryptedFileInfo.OpenText())
-            {
-                var curlyBraces = 0;
-                var position = 0;
-                do
-                {
-                    var buffer = new char[1];
-                    encryptedTs.Read(buffer, 0, 1);
-                    switch (buffer[0])
-                    {
-                        case '{':
-                            curlyBraces++;
-                            break;
-                        case '}':
-                            curlyBraces--;
-                            break;
-                    }
-                    position++;
-                } while (!encryptedTs.EndOfStream && curlyBraces > 0);
-                encryptedPortionLength = position;
             }
-            return encryptedPortionLength;
+            else if (decrypted is DirectoryInfo)
+            {
+
+            }
+            return null;
         }
 
         /// <summary>
@@ -138,7 +96,7 @@ namespace DragEncrypt
         /// <param name="originalFile"></param>
         /// <param name="key"></param>
         /// <param name="deleteOriginalSafely"></param>
-        public static FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
+        public FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
         {
             if (originalFile == null) throw new ArgumentNullException(nameof(originalFile));
             if (!originalFile.Exists) throw new ArgumentException($"{nameof(originalFile)} points to a non-existant file");
@@ -146,7 +104,7 @@ namespace DragEncrypt
             // ready encryption hashedKey and info
             var info = new EncryptionInfo
             {
-                Version = Application.ProductVersion,
+                Version = "1.0.0",
                 HashAlgorithm = typeof (SHA256CryptoServiceProvider),
                 EncryptionAlgorithm = typeof (AesCryptoServiceProvider),
                 KeySize = 256,
@@ -204,6 +162,7 @@ namespace DragEncrypt
                 Core.SafeOverwriteFile(zippedFile);
                 zippedFile.Delete();
             }
+            newFile = new FileInfo(newFile.FullName);
 
             // safe deleting of the original file
             if (!deleteOriginalSafely) return newFile;
@@ -240,6 +199,11 @@ namespace DragEncrypt
 
             hashedKey = keyGen.GetBytes(info.KeySize/8);
             info.Salt = keyGen.Salt;
+        }
+
+        public static bool IsEncrypted(FileSystemInfo target)
+        {
+            return target.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

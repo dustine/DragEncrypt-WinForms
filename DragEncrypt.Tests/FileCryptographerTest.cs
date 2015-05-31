@@ -7,18 +7,25 @@ using NUnit.Framework;
 
 namespace DragEncrypt.Tests
 {
-    [TestFixture]
+    [TestFixture("1.0.0")]
     internal class FileCryptographerTest
     {
+        private readonly string _version;
         private const string TestDirectory = "DragEncrypt-tests/";
+        private FileCryptographer _fileCryptographer;
         private FileInfo _originalFile;
         private FileInfo _encryptedFile;
-        private FileInfo _decryptedFile;
+        private FileSystemInfo _decryptedFile;
+
+        public FileCryptographerTest(string version)
+        {
+            _version = version;
+        }
 
         [SetUp]
         public void Init()
         {
-            Directory.CreateDirectory(TestDirectory);
+            var dir = Directory.CreateDirectory(TestDirectory);
 
             _originalFile = new FileInfo($"{TestDirectory}/originalFile");
             using (var originalFs = _originalFile.Open(FileMode.Create))
@@ -31,6 +38,8 @@ namespace DragEncrypt.Tests
                     originalFs.Write(buffer, 0, buffer.Length);
                 }
             }
+
+            _fileCryptographer = new FileCryptographer(new Version(_version));
         }
 
         [TearDown]
@@ -83,7 +92,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            FileCryptographer.EncryptFile(null, "");
+            _fileCryptographer.EncryptFile(null, "");
 
             // assertion
         }
@@ -95,7 +104,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            FileCryptographer.EncryptFile(_originalFile, null);
+            _fileCryptographer.EncryptFile(_originalFile, null);
 
             // assertion
         }
@@ -107,7 +116,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            FileCryptographer.DecryptFile(new FileInfo(TestDirectory + "fakeFile"), "");
+            _fileCryptographer.DecryptFile(new FileInfo(TestDirectory + "fakeFile"), "");
 
             // assertion
         }
@@ -121,7 +130,7 @@ namespace DragEncrypt.Tests
             using (var fs = _originalFile.OpenWrite())
             {
                 // action
-                FileCryptographer.EncryptFile(_originalFile, "");
+                _fileCryptographer.EncryptFile(_originalFile, "");
             }
             
             // assertion
@@ -133,7 +142,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            _encryptedFile=FileCryptographer.EncryptFile(_originalFile, "");
+            _encryptedFile= _fileCryptographer.EncryptFile(_originalFile, "");
 
             // assertion
             Assert.IsTrue(File.Exists(_encryptedFile.FullName), "encryptedFile.Exists");
@@ -148,7 +157,7 @@ namespace DragEncrypt.Tests
             using (var fs = conflictFile.Create())
             {
                 // action
-                _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
+                _encryptedFile = _fileCryptographer.EncryptFile(_originalFile, "");
 
                 // assert
                 Assert.IsTrue(File.Exists(_encryptedFile.FullName));
@@ -160,12 +169,12 @@ namespace DragEncrypt.Tests
         public void Encrypt_FileAlreadyExists_NewFileNamedCorrectly([Values(1,10)]int attempts)
         {
             // arrange 
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
+            _encryptedFile = _fileCryptographer.EncryptFile(_originalFile, "");
 
             // action
             for (var i = 1; i < attempts; i++)
             {
-                var newFile = FileCryptographer.EncryptFile(_originalFile, "");
+                var newFile = _fileCryptographer.EncryptFile(_originalFile, "");
                 // assert
                 Assert.AreEqual(String.Format("{0} ({1}){2}", _encryptedFile.Name.Substring(0, _encryptedFile.Name.Length - _encryptedFile.Extension.Length), i, _encryptedFile.Extension), newFile.Name);
             }
@@ -175,9 +184,9 @@ namespace DragEncrypt.Tests
         public void Encrypt_SafelyDeleteOriginal_OriginalGone()
         {
             // arrange
-            
+
             // action
-            FileCryptographer.EncryptFile(_originalFile, "", true);
+            _fileCryptographer.EncryptFile(_originalFile, "", true);
 
             // assertion
             Assert.IsFalse(File.Exists(_originalFile.FullName));
@@ -189,7 +198,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
+            _encryptedFile = _fileCryptographer.EncryptFile(_originalFile, "");
 
             // assertion
             Assert.IsTrue(File.Exists(_encryptedFile.FullName));
@@ -212,7 +221,7 @@ namespace DragEncrypt.Tests
         public void Encrypt_AnyStringKey_HasFilledInJsonHeader()
         {
             // arrange
-            FileCryptographer.EncryptFile(_originalFile, "");
+            _fileCryptographer.EncryptFile(_originalFile, "");
 
             // action
             EncryptionInfo encryptInfo;
@@ -260,7 +269,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            FileCryptographer.DecryptFile(null, "");
+            _fileCryptographer.DecryptFile(null, "");
 
             // assertion
         }
@@ -270,9 +279,9 @@ namespace DragEncrypt.Tests
         public void Decrypt_NullKey_ArgumentNullException()
         {
             // arrange
-            FileCryptographer.EncryptFile(_originalFile, "");
+            _fileCryptographer.EncryptFile(_originalFile, "");
             // action
-            FileCryptographer.DecryptFile(_originalFile, null);
+            _fileCryptographer.DecryptFile(_originalFile, null);
 
             // assertion
         }
@@ -284,7 +293,7 @@ namespace DragEncrypt.Tests
             // arrange
 
             // action
-            FileCryptographer.DecryptFile(new FileInfo(TestDirectory + "fakeFile"), "");
+            _fileCryptographer.DecryptFile(new FileInfo(TestDirectory + "fakeFile"), "");
 
             // assertion
         }
@@ -294,13 +303,13 @@ namespace DragEncrypt.Tests
         public void Decrypt_UnavailableFile_IOException()
         {
             // arrange
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, "");
+            _encryptedFile = _fileCryptographer.EncryptFile(_originalFile, "");
             
             // ReSharper disable once UnusedVariable
             using (var fs = _encryptedFile.Open(FileMode.Open, FileAccess.ReadWrite))
             {
                 // action
-                FileCryptographer.DecryptFile(_encryptedFile, "");
+                _fileCryptographer.DecryptFile(_encryptedFile, "");
             }
 
             // assertion
@@ -312,11 +321,11 @@ namespace DragEncrypt.Tests
             [Values(" ", "B")] string decryptKey)
         {
             // arrange
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile, encryptKey);
+            _encryptedFile = _fileCryptographer.EncryptFile(_originalFile, encryptKey);
             // Assert.IsFalse(_key == _fc.HashedKey);
 
             // action
-            FileCryptographer.DecryptFile(_encryptedFile, decryptKey);
+            _fileCryptographer.DecryptFile(_encryptedFile, decryptKey);
 
             // assertion
         }
@@ -326,13 +335,13 @@ namespace DragEncrypt.Tests
             [Values("", "password", "a really long password that has the intent of beating any key size")] string key)
         {
             // arrange
-            _encryptedFile=FileCryptographer.EncryptFile(_originalFile, key);
+            _encryptedFile= _fileCryptographer.EncryptFile(_originalFile, key);
 
             // action
-            _decryptedFile=FileCryptographer.DecryptFile(_encryptedFile, key);
+            _decryptedFile= _fileCryptographer.DecryptFile(_encryptedFile, key);
 
             // assertion
-            FileAssert.AreEqual(_originalFile, _decryptedFile); // hah lol
+            FileAssert.AreEqual(_originalFile, _decryptedFile as FileInfo); // hah lol
         }
 
         [Test]
@@ -344,7 +353,7 @@ namespace DragEncrypt.Tests
             _originalFile = new FileInfo(newDirectory.FullName);
 
             // action
-            _encryptedFile = FileCryptographer.EncryptFile(_originalFile,"");
+            _encryptedFile = _fileCryptographer.EncryptFile(_originalFile,"");
 
             // assertion
         }

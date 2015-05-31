@@ -54,7 +54,7 @@ namespace DragEncrypt
             optionsGroupBox.Enabled = true;
             filePathLabel.Text = _encryptedFileInfo.FullName;
 
-            if (FileCryptographer.CurrentAlgorithm.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
             {
                 // options
                 deleteFileCheckBox.Enabled = false;
@@ -128,7 +128,7 @@ namespace DragEncrypt
             var key = passwordBox.Text;
             passwordBox.Text = null;
 
-            if (FileCryptographer.CurrentAlgorithm.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
             {
                 Task.Factory.StartNew(
                     () =>
