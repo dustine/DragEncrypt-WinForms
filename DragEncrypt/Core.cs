@@ -21,19 +21,9 @@ namespace DragEncrypt
             if (!conflictFile.Exists) return conflictFile;
             for (var i = 1;; i++)
             {
-                var target = $"{conflictFile.DirectoryName}/{GetFilenameWithoutExtension(conflictFile)} ({i}){conflictFile.Extension}";
+                var target = $"{conflictFile.DirectoryName}/{Path.GetFileNameWithoutExtension(conflictFile.Name)} ({i}){conflictFile.Extension}";
                 if (!File.Exists(target)) return new FileInfo(target);
             }
-        }
-
-        public static string GetFilenameWithoutExtension(FileSystemInfo conflictFile)
-        {
-            return conflictFile.Name.Substring(0, conflictFile.Name.Length - conflictFile.Extension.Length);
-        }
-
-        public static string GetFilenameWithoutExtension(string conflictFile)
-        {
-            return GetFilenameWithoutExtension(new FileInfo(conflictFile));
         }
 
         public static void ShallowEraseList<T>(IList<T> bytes)

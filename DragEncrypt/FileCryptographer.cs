@@ -43,7 +43,7 @@ namespace DragEncrypt
 
             // decrypting the file
             // prevent conflict with any existing file
-            var newFile = Core.GetNonCollidingFile(Core.GetFilenameWithoutExtension(encryptedFile));
+            var newFile = Core.GetNonCollidingFile(Path.Combine(encryptedFile.DirectoryName,Path.GetFileNameWithoutExtension(encryptedFile.Name)));
             using (var tempFiles = new TempFileGenerator())
             {
                 var zippedFile = tempFiles.CreateFile();
