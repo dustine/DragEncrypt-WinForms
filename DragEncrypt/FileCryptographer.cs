@@ -242,7 +242,7 @@ namespace DragEncrypt
             }
         }
 
-        public static bool CanEncrypt(string target)
+        public static bool CanProcess(string target)
         {
             var targetInfo = new FileInfo(target);
             return targetInfo.Exists && !targetInfo.Attributes.HasFlag(FileAttributes.Directory);

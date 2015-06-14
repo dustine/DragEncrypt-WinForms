@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DragEncrypt.Properties;
@@ -25,38 +26,22 @@ namespace DragEncrypt
             get{ return _targetFileLocation;}
             set
             {
-                if (value == null)
+                if (string.IsNullOrWhiteSpace(value))
                 {
                     if (TargetFileInfo != null) return;
                     UnknownFunctionFeatures();
                 }
                 else
                 {
-                    if (!string.IsNullOrWhiteSpace(value) && FileCryptographer.CanProcess(value))
-                    {
-                        TargetFileInfo = new FileInfo(value);
-                        SwapEncryptDecryptFeatures();
-                    }
+                    if (!FileCryptographer.CanProcess(value)) return;
+                    TargetFileInfo = new FileInfo(value);
+                    _targetFileLocation = TargetFileInfo.FullName;
+                    SwapEncryptDecryptFeatures();
                 }
-                _targetFileLocation = TargetFileInfo?.FullName;
             }
         }
 
         private FileInfo TargetFileInfo { get; set; }
-            //set
-        //    {
-        //        if (value == null)
-        //        {
-        //            if (TargetFileInfo != null) return;
-        //            UnknownFunctionFeatures();
-        //        }
-        //        else
-        //        {
-        //            TargetFileInfo = value;
-        //            SwapEncryptDecryptFeatures();
-        //        }
-        //    }
-        //}
 
         private void UnknownFunctionFeatures()
         {
@@ -109,7 +94,7 @@ namespace DragEncrypt
 
         private void changeFileButton_Click(object sender, EventArgs e)
         {
-            TargetFileInfo = PickTargetFile();
+            TargetFileLocation = PickTargetFile()?.FullName;
         }
 
         private void HidePassword()
@@ -205,7 +190,10 @@ namespace DragEncrypt
 
         private static bool Error(Exception e)
         {
-            MessageBox.Show(e.ToString());
+            SystemSounds.Exclamation.Play();
+            //MessageBox.Show(e.ToString());
+            var error = Core.GetNonCollidingFile("DragDecrypt-ErrorLog.log");
+            File.WriteAllText(error.FullName,e.ToString());
             return true;
         }
 
@@ -223,8 +211,7 @@ namespace DragEncrypt
 
         private void MainProcess_DragDrop(object sender, DragEventArgs e)
         {
-            var file = ((string[])e.Data.GetData(DataFormats.FileDrop)).First();
-            TargetFileInfo = new FileInfo(file);
+            TargetFileLocation = ((string[])e.Data.GetData(DataFormats.FileDrop)).First();
         }
     }
 }
