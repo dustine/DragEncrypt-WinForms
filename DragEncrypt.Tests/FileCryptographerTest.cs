@@ -26,18 +26,7 @@ namespace DragEncrypt.Tests
         [TearDown]
         public void TearDown()
         {
-            EraseDirectory(TestDirectory);
-        }
-
-        private static void EraseDirectory(string directory)
-        {
-            foreach (var file in Directory.EnumerateFiles(directory))
-                File.Delete(file);
-            foreach (var dir in Directory.EnumerateDirectories(directory))
-            {
-                EraseDirectory(dir);
-            }
-            Directory.Delete(directory);
+            Directory.Delete(TestDirectory, true);
         }
 
         [Test]
