@@ -128,7 +128,7 @@ namespace DragEncrypt
             {
                 Task.Factory.StartNew(
                     () =>
-                        FileCryptographer.DecryptFile(EncryptedFileInfo, key))
+                        FileCryptographer.Decrypt(EncryptedFileInfo, key))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
@@ -140,7 +140,7 @@ namespace DragEncrypt
             {
                 Task.Factory.StartNew(
                     () =>
-                        FileCryptographer.EncryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
+                        FileCryptographer.Encrypt(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
