@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using DragEncrypt.Properties;
@@ -17,10 +19,12 @@ namespace DragEncrypt.Tests
         private FileInfo _originalFile;
         private FileInfo _encryptedFile;
         private FileSystemInfo _decryptedFile;
+        private IList<string> _previousVersions;
 
-        public FileCryptographerTest(string version)
+        public FileCryptographerTest(string version, IList<string> prevVersions)
         {
             _version = version;
+            _previousVersions = prevVersions;
         }
 
         [SetUp]
@@ -28,17 +32,7 @@ namespace DragEncrypt.Tests
         {
             var dir = Directory.CreateDirectory(TestDirectory);
 
-            _originalFile = new FileInfo($"{TestDirectory}/originalFile");
-            using (var originalFs = _originalFile.Open(FileMode.Create))
-            {
-                var random = new Random();
-                for (var i = 0; i < 1024; i++)
-                {
-                    var buffer = new byte[1024];
-                    random.NextBytes(buffer);
-                    originalFs.Write(buffer, 0, buffer.Length);
-                }
-            }
+            _originalFile = Core.CreateRandomFile($"{TestDirectory}/originalFile");
 
             _fileCryptographer = new FileCryptographer(new Version(_version));
         }
@@ -46,7 +40,7 @@ namespace DragEncrypt.Tests
         [TearDown]
         public void TearDown()
         {
-            EraseDirectory(TestDirectory);
+            Directory.Delete(TestDirectory,true);
         }
 
         private static void EraseDirectory(string directory)
@@ -60,31 +54,7 @@ namespace DragEncrypt.Tests
             Directory.Delete(directory);
         }
 
-        [Test]
-        public void SafeOverwriteFile_OverwriteTestFile_EqualOrBiggerLengthToOriginalFile()
-        {
-            //arrange
-            //action
-            Core.SafeOverwriteFile(_originalFile);
-            //assert
-            Assert.GreaterOrEqual(_originalFile.Length, _originalFile.Length);
-        }
-
-        [Test]
-        public void SafeOverwriteFile_OverwriteTestFile_OverwritesAsEmptyFile()
-        {
-            //arrange
-            //action
-            Core.SafeOverwriteFile(_originalFile);
-            //assert
-            using (var fs = _originalFile.OpenRead())
-            {
-                while (fs.Position < fs.Length)
-                {
-                    Assert.AreEqual(fs.ReadByte(), 0);
-                }
-            }
-        }
+        
 
         [Test]
         [ExpectedException(typeof(ArgumentNullException))]

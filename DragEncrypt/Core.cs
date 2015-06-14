@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -52,6 +53,22 @@ namespace DragEncrypt
                 for (var i = file.Length/buffer.Length; i >= 0; i--)
                     fs.Write(buffer, 0, buffer.Length);
             }
+        }
+
+        public static FileInfo CreateRandomFile(string location)
+        {
+            var file = new FileInfo(location);
+            using (var fileFs = file.Open(FileMode.Create))
+            {
+                var random = new Random();
+                for (var i = 0; i < 1024; i++)
+                {
+                    var buffer = new byte[1024];
+                    random.NextBytes(buffer);
+                    fileFs.Write(buffer, 0, buffer.Length);
+                }
+            }
+            return file;
         }
     }
 }
