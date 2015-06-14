@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -40,6 +41,22 @@ namespace DragEncrypt
             if (bytes == null) return;
             for (var i = 0; i < bytes.Count; i++)
                 bytes[i] = default(T);
+        }
+
+        public static FileInfo CreateRandomFilledFile(string location)
+        {
+            var file = new FileInfo(location);
+            using (var fileStream = file.Open(FileMode.Create))
+            {
+                var random = new Random();
+                for (var i = 0; i < 1024; i++)
+                {
+                    var buffer = new byte[1024];
+                    random.NextBytes(buffer);
+                    fileStream.Write(buffer, 0, buffer.Length);
+                }
+            }
+            return file;
         }
     }
 }

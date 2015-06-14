@@ -20,17 +20,7 @@ namespace DragEncrypt.Tests
         {
             Directory.CreateDirectory(TestDirectory);
 
-            _originalFile = new FileInfo($"{TestDirectory}/originalFile");
-            using (var originalFs = _originalFile.Open(FileMode.Create))
-            {
-                var random = new Random();
-                for (var i = 0; i < 1024; i++)
-                {
-                    var buffer = new byte[1024];
-                    random.NextBytes(buffer);
-                    originalFs.Write(buffer, 0, buffer.Length);
-                }
-            }
+            _originalFile = Core.CreateRandomFilledFile($"{TestDirectory}/originalFile");
         }
 
         [TearDown]
@@ -48,32 +38,6 @@ namespace DragEncrypt.Tests
                 EraseDirectory(dir);
             }
             Directory.Delete(directory);
-        }
-
-        [Test]
-        public void SafeOverwriteFile_OverwriteTestFile_EqualOrBiggerLengthToOriginalFile()
-        {
-            //arrange
-            //action
-            FileCryptographer.SafeOverwriteFile(_originalFile);
-            //assert
-            Assert.GreaterOrEqual(_originalFile.Length, _originalFile.Length);
-        }
-
-        [Test]
-        public void SafeOverwriteFile_OverwriteTestFile_OverwritesAsEmptyFile()
-        {
-            //arrange
-            //action
-            FileCryptographer.SafeOverwriteFile(_originalFile);
-            //assert
-            using (var fs = _originalFile.OpenRead())
-            {
-                while (fs.Position < fs.Length)
-                {
-                    Assert.AreEqual(fs.ReadByte(), 0);
-                }
-            }
         }
 
         [Test]
