@@ -8,6 +8,7 @@ using NUnit.Framework;
 namespace DragEncrypt.Tests
 {
     [TestFixture("1.0.0")]
+    [TestFixture("1.1.0")]
     internal class FileCryptographerTest
     {
         private readonly string _version;
@@ -345,8 +346,8 @@ namespace DragEncrypt.Tests
         }
 
         [Test]
-        [ExpectedException(typeof (ArgumentException))]
-        public void Encrypt_IsDirectory_ArgumentException()
+        [ExpectedException(typeof (FileNotFoundException))]
+        public void Encrypt_IsDirectory_FileNotFoundException()
         {
             // arrange
             var newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");

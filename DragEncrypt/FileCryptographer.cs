@@ -43,7 +43,7 @@ namespace DragEncrypt
         public FileSystemInfo Decrypt(FileInfo encryptedFile, string key)
         {
             if (encryptedFile == null) throw new ArgumentNullException(nameof(encryptedFile));
-            if (!encryptedFile.Exists) throw new FileNotFoundException(encryptedFile.FullName);
+            if (!File.Exists(encryptedFile.FullName)) throw new FileNotFoundException(encryptedFile.FullName);
             if (key == null) throw new ArgumentNullException(nameof(key));
             // ready encryption hashedKey and info
             EncryptionInfo info = null;
@@ -74,7 +74,8 @@ namespace DragEncrypt
                                                          a.TargettedVersion.Minor == targetVersion.Minor);
 
             // decrypting the file
-            return algorithm.Decrypt(encryptedFile, key, info);
+            if (algorithm != null) return algorithm.Decrypt(encryptedFile, key, info);
+            throw new Exception($"Unknown version {targetVersion}");
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace DragEncrypt
         public FileInfo Encrypt(FileSystemInfo original, string key, bool deleteOriginalSafely = false)
         {
             if (original == null) throw new ArgumentNullException(nameof(original));
-            if (!original.Exists) throw new FileNotFoundException(original.FullName);
+            if (!File.Exists(original.FullName)) throw new FileNotFoundException(original.FullName);
             if (key == null) throw new ArgumentNullException(nameof(key));
 
             var encrypted = CurrentAlgorithm.Encrypt(original, key, CurrentAlgorithm.GetDefaultEncryptionInfo());

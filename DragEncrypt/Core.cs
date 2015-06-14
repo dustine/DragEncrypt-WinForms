@@ -14,14 +14,14 @@ namespace DragEncrypt
         /// </remarks>
         /// <param name="fileProposal">The targetted name</param>
         /// <returns>FileInfo of the first non-conflict file possible</returns>
-        public static string GetNonCollidingFile(string fileProposal)
+        public static string GetNoConflictFileSystemName(string fileProposal)
         {
             var conflictFile = new FileInfo(fileProposal);
-            if (!conflictFile.Exists) return fileProposal;
+            if (!File.Exists(fileProposal) && !Directory.Exists(fileProposal)) return fileProposal;
             for (var i = 1;; i++)
             {
                 var target = $"{conflictFile.DirectoryName}/{GetFilenameWithoutExtension(conflictFile)} ({i}){conflictFile.Extension}";
-                if (!File.Exists(target)) return target;
+                if (!File.Exists(target) && !Directory.Exists(target)) return target;
             }
         }
 

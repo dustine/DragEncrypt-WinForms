@@ -57,7 +57,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get target file
-            var encrypted = new FileInfo(original.FullName + Properties.Settings.Default.Extension);
+            var encrypted = new FileInfo(Core.GetNoConflictFileSystemName(original.FullName + Properties.Settings.Default.Extension));
 
             using (var generator = new SecureTempFileGenerator())
             {
@@ -76,7 +76,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get target file
-            var decrypted = new FileInfo(Core.GetNonCollidingFile(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name)));
+            var decrypted = new FileInfo(Core.GetNoConflictFileSystemName(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name)));
 
             using (var generator = new SecureTempFileGenerator())
             {
@@ -95,7 +95,7 @@ namespace DragEncrypt.Algorithm
             return decrypted;
         }
 
-        private FileInfo Deflate(FileInfo original, FileInfo target)
+        internal FileInfo Deflate(FileInfo original, FileInfo target)
         {
             if(original.Attributes.HasFlag(FileAttributes.Directory))
                 throw new ArgumentException($"{TargettedVersion} cannot deflate directories");
@@ -111,7 +111,7 @@ namespace DragEncrypt.Algorithm
             return target;
         }
 
-        private FileInfo Inflate(FileInfo deflated, FileInfo target)
+        internal FileInfo Inflate(FileInfo deflated, FileInfo target)
         { 
             // unzip from the temporary file into the final permanent file
             using (var deflatedFs = deflated.OpenRead())
@@ -122,10 +122,8 @@ namespace DragEncrypt.Algorithm
             return target;
         }
 
-        private FileInfo Encrypt(FileInfo zipped, byte[] hashedKey, EncryptionInfo info, FileInfo target)
+        internal FileInfo Encrypt(FileInfo zipped, byte[] hashedKey, EncryptionInfo info, FileInfo target)
         {
-            var originalFile = new FileInfo(zipped.FullName);
-
             using (var crypter = new AesCryptoServiceProvider())
             {
                 crypter.KeySize = info.KeySize;
@@ -142,7 +140,7 @@ namespace DragEncrypt.Algorithm
                 }
 
                 // encrypt zipped file into final file, as an append
-                using (var originalFs = originalFile.OpenRead())
+                using (var originalFs = zipped.OpenRead())
                 using (
                     var cs = new CryptoStream(originalFs, crypter.CreateEncryptor(), CryptoStreamMode.Read))
                 using (var targetFs = target.Open(FileMode.Open, FileAccess.ReadWrite))
@@ -166,7 +164,7 @@ namespace DragEncrypt.Algorithm
             }
         }
 
-        private FileInfo Decrypt(FileInfo encrypted, byte[] hashedKey, EncryptionInfo info, FileInfo target)
+        internal FileInfo Decrypt(FileInfo encrypted, byte[] hashedKey, EncryptionInfo info, FileInfo target)
         {
             // find the "end" of the JSON header
             var encryptedFile = new FileInfo(encrypted.FullName);
@@ -195,11 +193,13 @@ namespace DragEncrypt.Algorithm
             return target;
         }
 
-        public string Hash(FileInfo original, EncryptionInfo info)
+        public string Hash(FileSystemInfo original, EncryptionInfo info)
         {
             //info.HashAlgorithm = typeof(SHA256CryptoServiceProvider);
+            var originalFile = original as FileInfo;
+            if(originalFile == null) throw new ArgumentException($"{TargettedVersion} cannot hash directories");
 
-            using (var fs = original.OpenRead())
+            using (var fs = originalFile.OpenRead())
             using (var hasher = new SHA256CryptoServiceProvider())
             {
                 var hash = hasher.ComputeHash(fs);
