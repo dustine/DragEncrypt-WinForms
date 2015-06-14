@@ -2,19 +2,36 @@
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using DragEncrypt.Properties;
 
 namespace DragEncrypt
 {
     partial class AboutBox : Form
     {
+        private const string Thanks = "Dedicated to Spacey, don't ever stop youself from getting lost in the nightsky.";
+
+        private const string License =
+@"The MIT License (MIT)
+
+Copyright(c) 2015 Dustine Camacho
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the ""Software""), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This software contains icons from the WPZOOM Developer Icon Set (WPZOOM) / CC BY-SA 3.0.";
+
         public AboutBox()
         {
             InitializeComponent();
-            Text = String.Format("About {0}", AssemblyTitle);
+            Icon = Resources.DrawEncrypt;
+            Text = $"About {AssemblyTitle}";
             labelProductName.Text = AssemblyProduct;
-            labelVersion.Text = String.Format("Version {0}", AssemblyVersion);
+            labelVersion.Text = $"Version {AssemblyVersion}";
             labelCopyright.Text = AssemblyCopyright;
-            textBoxDescription.Text = AssemblyDescription;
+            textBoxDescription.Text = $"{AssemblyDescription}\r\n\r\n{Thanks}\r\n\r\n\r\n{License}";
         }
 
         public override sealed string Text
@@ -40,10 +57,7 @@ namespace DragEncrypt
             }
         }
 
-        private static string AssemblyVersion
-        {
-            get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); }
-        }
+        private static string AssemblyVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         private static string AssemblyDescription
         {
@@ -51,9 +65,7 @@ namespace DragEncrypt
             {
                 var attributes =
                     Assembly.GetExecutingAssembly().GetCustomAttributes(typeof (AssemblyDescriptionAttribute), false);
-                if (attributes.Length == 0)
-                    return "";
-                return ((AssemblyDescriptionAttribute) attributes[0]).Description;
+                return attributes.Length == 0 ? "" : ((AssemblyDescriptionAttribute) attributes[0]).Description;
             }
         }
 

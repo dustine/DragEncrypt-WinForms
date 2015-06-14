@@ -33,6 +33,7 @@ namespace DragEncrypt
         {
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.fileSelectPanel = new System.Windows.Forms.Panel();
+            this.filePathLabel = new DragEncrypt.PathLabel();
             this.changeFileButton = new System.Windows.Forms.Button();
             this.optionsGroupBox = new System.Windows.Forms.GroupBox();
             this.deleteFileCheckBox = new System.Windows.Forms.CheckBox();
@@ -45,7 +46,6 @@ namespace DragEncrypt
             this.showPasswordHoldButton = new System.Windows.Forms.Button();
             this.passwordBox = new System.Windows.Forms.TextBox();
             this.aboutLinkLabel = new System.Windows.Forms.LinkLabel();
-            this.filePathLabel = new DragEncrypt.PathLabel();
             this.mainTableLayoutPanel.SuspendLayout();
             this.fileSelectPanel.SuspendLayout();
             this.optionsGroupBox.SuspendLayout();
@@ -90,6 +90,17 @@ namespace DragEncrypt
             this.fileSelectPanel.Name = "fileSelectPanel";
             this.fileSelectPanel.Size = new System.Drawing.Size(328, 25);
             this.fileSelectPanel.TabIndex = 1;
+            // 
+            // filePathLabel
+            // 
+            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.filePathLabel.Location = new System.Drawing.Point(0, 0);
+            this.filePathLabel.Name = "filePathLabel";
+            this.filePathLabel.Size = new System.Drawing.Size(304, 25);
+            this.filePathLabel.TabIndex = 2;
+            this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // changeFileButton
             // 
@@ -263,20 +274,10 @@ namespace DragEncrypt
             this.aboutLinkLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.aboutLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.aboutLinkLabel_LinkClicked);
             // 
-            // filePathLabel
-            // 
-            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.filePathLabel.Location = new System.Drawing.Point(0, 0);
-            this.filePathLabel.Name = "filePathLabel";
-            this.filePathLabel.Size = new System.Drawing.Size(304, 25);
-            this.filePathLabel.TabIndex = 2;
-            this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // MainProcess
             // 
             this.AcceptButton = this.submitButton;
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
@@ -287,6 +288,8 @@ namespace DragEncrypt
             this.Name = "MainProcess";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "DragEncrypt";
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.MainProcess_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainProcess_DragEnter);
             this.mainTableLayoutPanel.ResumeLayout(false);
             this.fileSelectPanel.ResumeLayout(false);
             this.optionsGroupBox.ResumeLayout(false);

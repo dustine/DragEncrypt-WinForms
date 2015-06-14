@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -28,7 +26,7 @@ namespace DragEncrypt
         /// </summary>
         /// <param name="encryptedFile"></param>
         /// <param name="key"></param>
-        public static FileInfo DecryptFile(FileInfo encryptedFile, string key)
+        public static FileInfo Decrypt(FileInfo encryptedFile, string key)
         {
             if (encryptedFile == null) throw new ArgumentNullException(nameof(encryptedFile));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -46,7 +44,7 @@ namespace DragEncrypt
             // decrypting the file
             // prevent conflict with any existing file
             var newFile = Core.GetNonCollidingFile(Core.GetFilenameWithoutExtension(encryptedFile));
-            using (var tempFiles = new TempFileInfoGenerator())
+            using (var tempFiles = new TempFileGenerator())
             {
                 var zippedFile = tempFiles.CreateFile();
                 // find the "end" of the JSON header
@@ -56,7 +54,8 @@ namespace DragEncrypt
                 using (var crypter = Activator.CreateInstance(info.EncryptionAlgorithm) as SymmetricAlgorithm)
                 {
                     // loading cryptography parameters
-                    Debug.Assert(crypter != null, "crypter != null");
+                    if(crypter == null)
+                        throw new CryptographicException($"Unknown Symmetric Algorithm: {info.EncryptionAlgorithm}");
                     crypter.KeySize = info.KeySize;
                     crypter.BlockSize = info.BlockSize;
                     crypter.Key = hashedKey;
@@ -89,7 +88,7 @@ namespace DragEncrypt
             var newHash = Hash(newFile, info.HashAlgorithm);
             if (newHash.Equals(info.OriginalHash, StringComparison.CurrentCultureIgnoreCase))
                 return newFile;
-            throw new CryptographicException("Result hash does not match initial hash");
+            throw new CryptographicException($"Checksum failed: Original was {info.OriginalHash}, obtained {newHash}");
         }
 
         private static long SeekEndOfJsonHeader(FileInfo encryptedFileInfo)
@@ -126,7 +125,7 @@ namespace DragEncrypt
         /// <param name="originalFile"></param>
         /// <param name="key"></param>
         /// <param name="deleteOriginalSafely"></param>
-        public static FileInfo EncryptFile(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
+        public static FileInfo Encrypt(FileInfo originalFile, string key, bool deleteOriginalSafely = false)
         {
             if (originalFile == null) throw new ArgumentNullException(nameof(originalFile));
             if (!originalFile.Exists) throw new ArgumentException($"{nameof(originalFile)} points to a non-existant file");
@@ -149,7 +148,7 @@ namespace DragEncrypt
             var newFile = Core.GetNonCollidingFile(originalFile.FullName + Settings.Default.Extension);
 
             // encrypt original file with info header in the start
-            using (var tempFiles = new TempFileInfoGenerator())
+            using (var tempFiles = new TempFileGenerator())
             using (var crypter = new AesCryptoServiceProvider())
             {
                 // load hashedKey and IV into cryptography service
@@ -211,7 +210,8 @@ namespace DragEncrypt
             using (var fs = file.OpenRead())
             using (var hasher = Activator.CreateInstance(hashAlgorithm) as HashAlgorithm)
             {
-                Debug.Assert(hasher != null, "hasher != null");
+                if (hasher == null)
+                    throw new CryptographicException($"Unknown Hash Algorithm: {hashAlgorithm}");
                 var hash = hasher.ComputeHash(fs);
                 var sb = new StringBuilder();
                 foreach (var b in hash)
@@ -240,6 +240,12 @@ namespace DragEncrypt
                 for (var i = file.Length/buffer.Length; i >= 0; i--)
                     fs.Write(buffer, 0, buffer.Length);
             }
+        }
+
+        public static bool CanProcess(string target)
+        {
+            var targetInfo = new FileInfo(target);
+            return targetInfo.Exists && !targetInfo.Attributes.HasFlag(FileAttributes.Directory);
         }
     }
 }

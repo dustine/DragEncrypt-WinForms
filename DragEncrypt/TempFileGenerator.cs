@@ -4,30 +4,30 @@ using System.IO;
 
 namespace DragEncrypt
 {
-    public class TempFileInfoGenerator : IDisposable
+    public class TempFileGenerator : IDisposable
     {
         private int _count;
         private readonly TempFileCollection _collection;
 
-        public TempFileInfoGenerator(string extension = "tmp")
+        public TempFileGenerator(string extension = "tmp")
         {
             _collection = new TempFileCollection();
             Extension = extension;
         }
 
-        public TempFileInfoGenerator(string tempDir, string extension = "tmp")
+        public TempFileGenerator(string tempDir, string extension = "tmp")
         {
             _collection = new TempFileCollection(tempDir);
             Extension = extension;
         }
 
-        public TempFileInfoGenerator(string tempDir, bool keepFiles, string extension = "tmp")
+        public TempFileGenerator(string tempDir, bool keepFiles, string extension = "tmp")
         {
             _collection = new TempFileCollection(tempDir, keepFiles);
             Extension = extension;
         }
 
-        public string Extension { get; private set; }
+        public string Extension { get; }
 
         public void Dispose()
         {
@@ -45,11 +45,13 @@ namespace DragEncrypt
         /// <returns>The fileinfo of</returns>
         public FileInfo CreateFile(string name = "", bool keepFile = false)
         {
-            if (String.IsNullOrWhiteSpace(name)) name = GetHashCode().ToString();
-            var extension = String.Format("{0}.{1}.{2}", name, _count++, Extension);
-            var filename = _collection.AddExtension(extension);
+            if (string.IsNullOrWhiteSpace(name)) name = GetHashCode().ToString();
+            var extension = $"{name}.{_count++}.{Extension}";
+            var filename = _collection.AddExtension(extension, keepFile);
             var fileInfo = new FileInfo(filename);
-            fileInfo.Create().Close();
+            using (fileInfo.Create())
+            {
+            }
             return fileInfo;
         }
     }

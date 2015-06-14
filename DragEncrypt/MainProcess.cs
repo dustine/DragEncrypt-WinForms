@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Media;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DragEncrypt.Properties;
@@ -9,33 +11,37 @@ namespace DragEncrypt
 {
     public partial class MainProcess : Form
     {
-        private FileInfo _encryptedFileInfo;
+        private string _targetFileLocation;
 
         public MainProcess(string fileLocation)
         {
             InitializeComponent();
             Icon = Resources.DrawEncrypt;
             deleteFileCheckBox.Checked = Settings.Default.SafelyDeleteFiles;
-            EncryptedFileInfo = String.IsNullOrWhiteSpace(fileLocation) || Directory.Exists(fileLocation) ? null : new FileInfo(fileLocation);
+            TargetFileLocation = fileLocation;
         }
 
-        private FileInfo EncryptedFileInfo
+        private string TargetFileLocation
         {
-            get { return _encryptedFileInfo; }
+            get{ return _targetFileLocation;}
             set
             {
-                if (value == null)
+                if (string.IsNullOrWhiteSpace(value))
                 {
-                    if (_encryptedFileInfo != null) return;
+                    if (TargetFileInfo != null) return;
                     UnknownFunctionFeatures();
                 }
                 else
                 {
-                    _encryptedFileInfo = value;
+                    if (!FileCryptographer.CanProcess(value)) return;
+                    TargetFileInfo = new FileInfo(value);
+                    _targetFileLocation = TargetFileInfo.FullName;
                     SwapEncryptDecryptFeatures();
                 }
             }
         }
+
+        private FileInfo TargetFileInfo { get; set; }
 
         private void UnknownFunctionFeatures()
         {
@@ -48,9 +54,9 @@ namespace DragEncrypt
         {
             submitButton.Enabled = true;
             optionsGroupBox.Enabled = true;
-            filePathLabel.Text = _encryptedFileInfo.FullName;
+            filePathLabel.Text = _targetFileLocation;
 
-            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.IsEncrypted(TargetFileInfo))
             {
                 // options
                 deleteFileCheckBox.Enabled = false;
@@ -78,7 +84,7 @@ namespace DragEncrypt
                 openFile.ShowDialog();
                 fileLocation = openFile.FileName;
             }
-            return String.IsNullOrWhiteSpace(fileLocation) ? null : new FileInfo(fileLocation);
+            return string.IsNullOrWhiteSpace(fileLocation) ? null : new FileInfo(fileLocation);
         }
 
         private void aboutLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -88,7 +94,7 @@ namespace DragEncrypt
 
         private void changeFileButton_Click(object sender, EventArgs e)
         {
-            EncryptedFileInfo = PickTargetFile();
+            TargetFileLocation = PickTargetFile()?.FullName;
         }
 
         private void HidePassword()
@@ -124,11 +130,11 @@ namespace DragEncrypt
             var key = passwordBox.Text;
             passwordBox.Text = null;
 
-            if (FileCryptographer.IsEncrypted(EncryptedFileInfo))
+            if (FileCryptographer.IsEncrypted(TargetFileInfo))
             {
                 Task.Factory.StartNew(
                     () =>
-                        FileCryptographer.DecryptFile(EncryptedFileInfo, key))
+                        FileCryptographer.Decrypt(TargetFileInfo, key))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
@@ -140,7 +146,7 @@ namespace DragEncrypt
             {
                 Task.Factory.StartNew(
                     () =>
-                        FileCryptographer.EncryptFile(EncryptedFileInfo, key, deleteFileCheckBox.Checked))
+                        FileCryptographer.Encrypt(TargetFileInfo, key, deleteFileCheckBox.Checked))
                     .ContinueWith(task =>
                     {
                         if (task.Exception != null) task.Exception.Handle(Error);
@@ -184,7 +190,10 @@ namespace DragEncrypt
 
         private static bool Error(Exception e)
         {
-            MessageBox.Show(e.ToString());
+            SystemSounds.Exclamation.Play();
+            //MessageBox.Show(e.ToString());
+            var error = Core.GetNonCollidingFile("DragDecrypt-ErrorLog.log");
+            File.WriteAllText(error.FullName,e.ToString());
             return true;
         }
 
@@ -192,6 +201,17 @@ namespace DragEncrypt
         {
             Settings.Default.SafelyDeleteFiles = deleteFileCheckBox.Checked;
             Settings.Default.Save();
+        }
+
+        private void MainProcess_DragEnter(object sender, DragEventArgs e)
+        {
+            if(e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void MainProcess_DragDrop(object sender, DragEventArgs e)
+        {
+            TargetFileLocation = ((string[])e.Data.GetData(DataFormats.FileDrop)).First();
         }
     }
 }
