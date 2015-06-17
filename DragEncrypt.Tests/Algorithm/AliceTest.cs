@@ -12,9 +12,6 @@ namespace DragEncrypt.Tests.Algorithm
     public class AliceTest
     {
         private const string TestDirectory = "DragEncrypt-tests/";
-        private FileInfo _originalFile;
-        private FileInfo _encryptedFile;
-        private FileSystemInfo _decryptedFile;
 
         [SetUp]
         public void Init()

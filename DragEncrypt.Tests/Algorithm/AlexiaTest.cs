@@ -11,7 +11,6 @@ namespace DragEncrypt.Tests.Algorithm
     [TestFixture]
     public class AlexiaTest
     {
-        private readonly string _version;
         private const string TestDirectory = "DragEncrypt-tests/";
         private FileInfo _originalFile;
         private FileInfo _encryptedFile;
@@ -35,7 +34,6 @@ namespace DragEncrypt.Tests.Algorithm
                 }
             }
 
-            _fileCryptographer = new FileCryptographer(new Version(_version));
         }
 
         [TearDown]
