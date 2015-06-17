@@ -30,7 +30,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = _alexia.HashKey(key, info);
 
-            var encrypted = new FileInfo(Core.GetNoConflictFileSystemName(original.FullName + Properties.Settings.Default.Extension));
+            var encrypted = Core.GetNonCollidingFile(original.FullName + Properties.Settings.Default.Extension);
             using (var generator = new SecureTempFileGenerator())
             {
                 // specific zipping
@@ -49,7 +49,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get zipped file
-            FileSystemInfo decrypted = new FileInfo(Core.GetNoConflictFileSystemName(encrypted.DirectoryName + '/' + Core.GetFilenameWithoutExtension(encrypted.Name)));
+            FileSystemInfo decrypted = Core.GetNonCollidingFile(encrypted.DirectoryName + '/' + Path.GetFileNameWithoutExtension(encrypted.Name));
 
             using (var generator = new SecureTempFileGenerator())
             {
@@ -72,7 +72,7 @@ namespace DragEncrypt.Algorithm
 
         private FileSystemInfo Inflate(FileInfo zipped, FileSystemInfo decrypted)
         {
-            var dummyDir = Directory.CreateDirectory(Core.GetNoConflictFileSystemName("dummy"));
+            var dummyDir = Core.GetNonCollidingDirectory("dummy");
             ZipFile.CreateFromDirectory(dummyDir.FullName, zipped.FullName);
 
             ZipFile.ExtractToDirectory(zipped.FullName, dummyDir.FullName);
@@ -90,7 +90,7 @@ namespace DragEncrypt.Algorithm
                 ZipFile.CreateFromDirectory(original.FullName, zipped.FullName);
                 return new FileInfo(zipped.FullName);
             }
-            var dummyDir = Directory.CreateDirectory(Core.GetNoConflictFileSystemName("dummy"));
+            var dummyDir = Core.GetNonCollidingDirectory("dummy");
             ZipFile.CreateFromDirectory(dummyDir.FullName, zipped.FullName);
             Directory.Delete(dummyDir.FullName);
 

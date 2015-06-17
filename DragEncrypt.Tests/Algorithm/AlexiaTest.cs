@@ -9,12 +9,14 @@ using NUnit.Framework;
 namespace DragEncrypt.Tests.Algorithm
 {
     [TestFixture]
-    public class AliceTest
+    public class AlexiaTest
     {
+        private readonly string _version;
         private const string TestDirectory = "DragEncrypt-tests/";
         private FileInfo _originalFile;
         private FileInfo _encryptedFile;
         private FileSystemInfo _decryptedFile;
+        private FileCryptographer _fileCryptographer;
 
         [SetUp]
         public void Init()
@@ -33,6 +35,7 @@ namespace DragEncrypt.Tests.Algorithm
                 }
             }
 
+            _fileCryptographer = new FileCryptographer(new Version(_version));
         }
 
         [TearDown]

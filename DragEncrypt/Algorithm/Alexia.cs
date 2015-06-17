@@ -57,7 +57,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get target file
-            var encrypted = new FileInfo(Core.GetNoConflictFileSystemName(original.FullName + Properties.Settings.Default.Extension));
+            var encrypted = Core.GetNonCollidingFile(original.FullName + Properties.Settings.Default.Extension);
 
             using (var generator = new SecureTempFileGenerator())
             {
@@ -76,7 +76,7 @@ namespace DragEncrypt.Algorithm
             // setup: hash key
             var hashedKey = HashKey(key, info);
             // setup: get target file
-            var decrypted = new FileInfo(Core.GetNoConflictFileSystemName(encrypted.DirectoryName+'/'+Core.GetFilenameWithoutExtension(encrypted.Name)));
+            var decrypted = Core.GetNonCollidingFile(encrypted.DirectoryName+'/'+Path.GetFileNameWithoutExtension(encrypted.Name));
 
             using (var generator = new SecureTempFileGenerator())
             {

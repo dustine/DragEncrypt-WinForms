@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DragEncrypt
 {
@@ -17,12 +18,23 @@ namespace DragEncrypt
         /// <returns>FileInfo of the first non-conflict file possible</returns>
         public static FileInfo GetNonCollidingFile(string fileProposal)
         {
-            var conflictFile = new FileInfo(fileProposal);
-            if (!conflictFile.Exists) return conflictFile;
+            var collidingFile = new FileInfo(fileProposal);
+            if (!collidingFile.Exists) return collidingFile;
             for (var i = 1;; i++)
             {
-                var target = $"{conflictFile.DirectoryName}/{Path.GetFileNameWithoutExtension(conflictFile.Name)} ({i}){conflictFile.Extension}";
+                var target = $"{collidingFile.DirectoryName}/{Path.GetFileNameWithoutExtension(collidingFile.Name)} ({i}){collidingFile.Extension}";
                 if (!File.Exists(target)) return new FileInfo(target);
+            }
+        }
+
+        public static DirectoryInfo GetNonCollidingDirectory(string directoryProposal)
+        {
+            var collidingDirectory = new DirectoryInfo(directoryProposal);
+            if (!collidingDirectory.Exists) return collidingDirectory;
+            for (var i = 1; ; i++)
+            {
+                var target = $"{collidingDirectory.Parent}/{Path.GetFileNameWithoutExtension(collidingDirectory.Name)} ({i})";
+                if (!Directory.Exists(target)) return new DirectoryInfo(target);
             }
         }
 
@@ -47,6 +59,19 @@ namespace DragEncrypt
                 }
             }
             return file;
+        }
+
+        public static void SafeOverwriteFile(FileInfo file)
+        {
+            //var buffer = new byte[1024];
+            //for (var i = buffer.Length - 1; i >= 0; i--)
+            //    buffer[i] = 0;
+            var buffer = Enumerable.Repeat((byte)0, 1024).ToArray();
+            using (var fs = file.OpenWrite())
+            {
+                for (var i = file.Length / buffer.Length; i >= 0; i--)
+                    fs.Write(buffer, 0, buffer.Length);
+            }
         }
     }
 }

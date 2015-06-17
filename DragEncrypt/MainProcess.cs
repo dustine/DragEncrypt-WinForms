@@ -22,6 +22,8 @@ namespace DragEncrypt
             TargetFileLocation = fileLocation;
         }
 
+        public FileCryptographer FileCryptographer { get; set; }
+
         private string TargetFileLocation
         {
             get{ return _targetFileLocation;}

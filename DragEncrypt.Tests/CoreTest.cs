@@ -31,7 +31,7 @@ namespace DragEncrypt
             //arrange
             var file = Core.CreateRandomFilledFile(TestDirectory + "file");
             //action
-            FileCryptographer.SafeOverwriteFile(file);
+            Core.SafeOverwriteFile(file);
             //assert
             Assert.GreaterOrEqual(file.Length, file.Length);
         }
@@ -42,7 +42,7 @@ namespace DragEncrypt
             //arrange
             var file = Core.CreateRandomFilledFile(TestDirectory + "file");
             //action
-            FileCryptographer.SafeOverwriteFile(file);
+            Core.SafeOverwriteFile(file);
             //assert
             using (var fs = file.OpenRead())
             {

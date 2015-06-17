@@ -122,5 +122,10 @@ namespace DragEncrypt
             {
             return target.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
+
+        public bool CanProcess(string value)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
