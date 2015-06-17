@@ -53,9 +53,9 @@ namespace DragEncrypt
                 try
                 {
                     info = da.GetEncryptionInfo(encryptedFile);
-                }
+            }
                 catch (IOException)
-                {
+            {
                     throw;
                 }
                 catch (Exception e)
@@ -63,7 +63,7 @@ namespace DragEncrypt
                     // ignored
                 }
                 if (info != null) break;
-            }
+                }
             // TODO(Dustine) Throw sensible exception (header can't be obtained)
             if (info == null) return null;
 
@@ -99,9 +99,9 @@ namespace DragEncrypt
                 // folder, so we need to go recursive
                 SafeOverwriteFolder(original);
                 ((DirectoryInfo) original).Delete(true);
-            }
+                }
             else
-            {
+                {
                 // if file, just overwrite it
                 Core.SafeOverwriteFile(original as FileInfo);
                 original.Delete();
@@ -115,11 +115,11 @@ namespace DragEncrypt
                     var enumerateFile in Directory.EnumerateFiles(directory.FullName, "*", SearchOption.AllDirectories).Select(s => new FileInfo(s)))
             {
                 Core.SafeOverwriteFile(enumerateFile);
-            }
+        }
         }
 
         public static bool IsEncrypted(FileSystemInfo target)
-        {
+            {
             return target.Extension.Equals(Settings.Default.Extension, StringComparison.CurrentCultureIgnoreCase);
         }
     }

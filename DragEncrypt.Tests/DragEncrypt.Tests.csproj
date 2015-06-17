@@ -60,6 +60,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Algorithm\AliceTest.cs" />
+    <Compile Include="CoreTest.cs" />
     <Compile Include="FileCryptographerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -6,46 +6,45 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace DragEncrypt.Tests
+namespace DragEncrypt
 {
     [TestFixture]
     class CoreTest
     {
-        private FileInfo _originalFile;
         private const string TestDirectory = "DragEncrypt-tests/";
 
         [SetUp]
         public void Init()
         {
-            var dir = Directory.CreateDirectory(TestDirectory);
-
-            _originalFile = Core.CreateRandomFile($"{TestDirectory}/originalFile");
+            Directory.CreateDirectory(TestDirectory);
         }
 
         [TearDown]
         public void TearDown()
         {
-            Directory.Delete(TestDirectory, true);
+            Directory.Delete(TestDirectory,true);
         }
 
         [Test]
         public void SafeOverwriteFile_OverwriteTestFile_EqualOrBiggerLengthToOriginalFile()
         {
             //arrange
+            var file = Core.CreateRandomFilledFile(TestDirectory + "file");
             //action
-            Core.SafeOverwriteFile(_originalFile);
+            FileCryptographer.SafeOverwriteFile(file);
             //assert
-            Assert.GreaterOrEqual(_originalFile.Length, _originalFile.Length);
+            Assert.GreaterOrEqual(file.Length, file.Length);
         }
 
         [Test]
         public void SafeOverwriteFile_OverwriteTestFile_OverwritesAsEmptyFile()
         {
             //arrange
+            var file = Core.CreateRandomFilledFile(TestDirectory + "file");
             //action
-            Core.SafeOverwriteFile(_originalFile);
+            FileCryptographer.SafeOverwriteFile(file);
             //assert
-            using (var fs = _originalFile.OpenRead())
+            using (var fs = file.OpenRead())
             {
                 while (fs.Position < fs.Length)
                 {

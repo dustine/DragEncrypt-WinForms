@@ -32,29 +32,14 @@ namespace DragEncrypt.Tests
         {
             var dir = Directory.CreateDirectory(TestDirectory);
 
-            _originalFile = Core.CreateRandomFile($"{TestDirectory}/originalFile");
-
-            _fileCryptographer = new FileCryptographer(new Version(_version));
+            _originalFile = Core.CreateRandomFilledFile($"{TestDirectory}/originalFile");
         }
 
         [TearDown]
         public void TearDown()
         {
-            Directory.Delete(TestDirectory,true);
+            Directory.Delete(TestDirectory, true);
         }
-
-        private static void EraseDirectory(string directory)
-        {
-            foreach (var file in Directory.EnumerateFiles(directory))
-                File.Delete(file);
-            foreach (var dir in Directory.EnumerateDirectories(directory))
-            {
-                EraseDirectory(dir);
-            }
-            Directory.Delete(directory);
-        }
-
-        
 
         [Test]
         [ExpectedException(typeof(ArgumentNullException))]
@@ -155,7 +140,7 @@ namespace DragEncrypt.Tests
         public void Encrypt_SafelyDeleteOriginal_OriginalGone()
         {
             // arrange
-
+            
             // action
             _fileCryptographer.Encrypt(_originalFile, "", true);
 

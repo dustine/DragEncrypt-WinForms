@@ -27,7 +27,7 @@ namespace DragEncrypt
             Extension = extension;
         }
 
-        public string Extension { get; internal set; }
+        public string Extension { get; }
 
         public void Dispose()
         {
@@ -47,9 +47,11 @@ namespace DragEncrypt
         {
             if (string.IsNullOrWhiteSpace(name)) name = GetHashCode().ToString();
             var extension = $"{name}.{_count++}.{Extension}";
-            var filename = _collection.AddExtension(extension);
+            var filename = _collection.AddExtension(extension, keepFile);
             var fileInfo = new FileInfo(filename);
-            fileInfo.Create().Close();
+            using (fileInfo.Create())
+            {
+            }
             return fileInfo;
         }
     }
