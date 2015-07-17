@@ -7,29 +7,34 @@ namespace DragEncrypt
 {
     public class TempFileGenerator : IDisposable
     {
-        private readonly List<Tuple<FileInfo, bool>> _collection;
-        private readonly bool _globalKeepFiles;
+        protected readonly List<Tuple<FileInfo, bool>> Collection;
 
-        public TempFileGenerator(bool keepFiles = false)
+        public TempFileGenerator(bool keepFile = false)
         {
-            _collection = new List<Tuple<FileInfo,bool>>();
-            _globalKeepFiles = keepFiles;
+            Collection = new List<Tuple<FileInfo,bool>>();
+            DefaultKeepFile = keepFile;
         }
 
-        public void Dispose()
+        public bool DefaultKeepFile { get; }
+
+        public virtual void Dispose()
         {
-            if (_globalKeepFiles) return;
-            foreach (var tuple in _collection.Where(tuple => !tuple.Item2))
+            foreach (var tuple in Collection.Where(tuple => !tuple.Item2))
             {
                 tuple.Item1.Delete();
             }
         }
 
-        public FileInfo CreateFile(bool keepFile = false)
+        public FileInfo CreateFile()
+        {
+            return CreateFile(DefaultKeepFile);
+        }
+
+        public FileInfo CreateFile(bool keepFile)
         {
             var fileLocation = Path.GetTempFileName();
             var file = new FileInfo(fileLocation);
-            _collection.Add(new Tuple<FileInfo, bool>(file,keepFile));
+            Collection.Add(new Tuple<FileInfo, bool>(file,keepFile));
             return file;
         }
     }

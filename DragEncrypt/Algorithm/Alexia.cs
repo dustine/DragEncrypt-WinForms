@@ -14,7 +14,7 @@ namespace DragEncrypt.Algorithm
     public class Alexia : ICryptographyAlgorithm
     {
         //private SecureTempFileGenerator TempFileGenerator { get; }
-        public Version TargettedVersion { get; } = new Version(1,0,0);
+        public Version TargettedVersion { get; } = new Version(1,0);
 
         public byte[] HashKey(string key, EncryptionInfo info)
         {

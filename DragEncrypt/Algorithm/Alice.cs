@@ -8,7 +8,7 @@ namespace DragEncrypt.Algorithm
     // ReSharper disable once UnusedMember.Global
     public class Alice: ICryptographyAlgorithm
     {
-        public Version TargettedVersion { get; } = new Version("1.1.0");
+        public Version TargettedVersion { get; } = new Version(1, 1);
 
         private readonly Alexia _alexia = new Alexia();
         public byte[] HashKey(string key, EncryptionInfo info)

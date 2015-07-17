@@ -1,30 +1,16 @@
-﻿using System;
-using System.CodeDom.Compiler;
-using System.IO;
+﻿using System.Linq;
 
 namespace DragEncrypt
 {
     public class SecureTempFileGenerator : TempFileGenerator
     {
-        public SecureTempFileGenerator(string extension = "tmp") : base(extension)
+        public override void Dispose()
         {
-        }
-
-        public SecureTempFileGenerator(string tempDir, string extension = "tmp") : base(tempDir, extension)
-        {
-        }
-
-        public SecureTempFileGenerator(string tempDir, bool keepFiles, string extension = "tmp") : base(tempDir, keepFiles, extension)
-        {
-        }
-
-        public new void Dispose()
-        {
-            foreach (var file in _collection)
+            foreach (var tuple in Collection.Where(tuple => !tuple.Item2))
             {
-                Core.SafeOverwriteFile(new FileInfo((string)file));
+                Core.SafeOverwriteFile(tuple.Item1);
             }
-            ((IDisposable) _collection).Dispose();
+            base.Dispose();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using DragEncrypt.Algorithm;
 using DragEncrypt.Properties;
 using Newtonsoft.Json;
 using NUnit;
@@ -13,27 +14,17 @@ namespace DragEncrypt.Tests.Algorithm
     {
         private const string TestDirectory = "DragEncrypt-tests/";
         private FileInfo _originalFile;
-        private FileInfo _encryptedFile;
-        private FileSystemInfo _decryptedFile;
-        private FileCryptographer _fileCryptographer;
+        private ICryptographyAlgorithm _algorithm;
 
         [SetUp]
         public void Init()
         {
+            // File tests
             var dir = Directory.CreateDirectory(TestDirectory);
 
-            _originalFile = new FileInfo($"{TestDirectory}/originalFile");
-            using (var originalFs = _originalFile.Open(FileMode.Create))
-            {
-                var random = new Random();
-                for (var i = 0; i < 1024; i++)
-                {
-                    var buffer = new byte[1024];
-                    random.NextBytes(buffer);
-                    originalFs.Write(buffer, 0, buffer.Length);
-                }
-            }
+            _originalFile = Core.CreateRandomFilledFile($"{TestDirectory}/originalFile");
 
+            _algorithm = new Alexia();
         }
 
         [TearDown]
@@ -43,277 +34,291 @@ namespace DragEncrypt.Tests.Algorithm
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Encrypt_NullFile_ArgumentNullException()
+        public void EncryptDecrypt_FileAndCorrectKey_SameFile([Values("","a","abc123")]string key)
         {
             // arrange
-
             // action
-            _fileCryptographer.Encrypt(null, "");
-
+            var encrypted = _algorithm.Encrypt(_originalFile, key, _algorithm.GetDefaultEncryptionInfo());
+            var decrypted = _algorithm.Decrypt(encrypted, key, _algorithm.GetEncryptionInfo(encrypted));
+            var decryptedFile = new FileInfo(decrypted.FullName);
             // assertion
+            Assert.True(decryptedFile.Exists);
+            Assert.False(decryptedFile.Attributes.HasFlag(FileAttributes.Directory));
+            FileAssert.AreEqual(_originalFile, decryptedFile);
         }
 
-        [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Encrypt_NullKey_ArgumentNullException()
-        {
-            // arrange
+        //[Test]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public void Encrypt_NullFile_ArgumentNullException()
+        //{
+        //    // arrange
 
-            // action
-            _fileCryptographer.Encrypt(_originalFile, null);
+        //    // action
+        //    _fileCryptographer.Encrypt(null, "");
 
-            // assertion
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        [ExpectedException(typeof(FileNotFoundException))]
-        public void Encrypt_NonExistingFile_Exception()
-        {
-            // arrange
+        //[Test]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public void Encrypt_NullKey_ArgumentNullException()
+        //{
+        //    // arrange
 
-            // action
-            _fileCryptographer.Decrypt(new FileInfo(TestDirectory + "fakeFile"), "");
+        //    // action
+        //    _fileCryptographer.Encrypt(_originalFile, null);
 
-            // assertion
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        [ExpectedException(typeof(IOException))]
-        public void Encrypt_UnavailableFile_IOException()
-        {
-            // arrange
-            // ReSharper disable once UnusedVariable
-            using (var fs = _originalFile.OpenWrite())
-            {
-                // action
-                _fileCryptographer.Encrypt(_originalFile, "");
-            }
+        //[Test]
+        //[ExpectedException(typeof(FileNotFoundException))]
+        //public void Encrypt_NonExistingFile_Exception()
+        //{
+        //    // arrange
 
-            // assertion
-        }
+        //    // action
+        //    _fileCryptographer.Decrypt(new FileInfo(TestDirectory + "fakeFile"), "");
 
-        [Test]
-        public void Encrypt_AnyStringKey_CreatesFile()
-        {
-            // arrange
+        //    // assertion
+        //}
 
-            // action
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //[Test]
+        //[ExpectedException(typeof(IOException))]
+        //public void Encrypt_UnavailableFile_IOException()
+        //{
+        //    // arrange
+        //    // ReSharper disable once UnusedVariable
+        //    using (var fs = _originalFile.OpenWrite())
+        //    {
+        //        // action
+        //        _fileCryptographer.Encrypt(_originalFile, "");
+        //    }
 
-            // assertion
-            Assert.IsTrue(File.Exists(_encryptedFile.FullName), "encryptedFile.Exists");
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        public void Encrypt_FileAlreadyExists_NewFileWithoutConflict()
-        {
-            // arrange
-            var conflictFile = new FileInfo(TestDirectory + _originalFile.Name + Settings.Default.Extension);
-            // ReSharper disable once UnusedVariable
-            using (var fs = conflictFile.Create())
-            {
-                // action
-                _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //[Test]
+        //public void Encrypt_AnyStringKey_CreatesFile()
+        //{
+        //    // arrange
 
-                // assert
-                Assert.IsTrue(File.Exists(_encryptedFile.FullName));
-                Assert.AreNotEqual(conflictFile.FullName, _encryptedFile.FullName);
-            }
-        }
+        //    // action
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
 
-        [Test]
-        public void Encrypt_FileAlreadyExists_NewFileNamedCorrectly([Values(1, 10)]int attempts)
-        {
-            // arrange 
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //    // assertion
+        //    Assert.IsTrue(File.Exists(_encryptedFile.FullName), "encryptedFile.Exists");
+        //}
 
-            // action
-            for (var i = 1; i < attempts; i++)
-            {
-                var newFile = _fileCryptographer.Encrypt(_originalFile, "");
-                // assert
-                Assert.AreEqual(String.Format("{0} ({1}){2}", _encryptedFile.Name.Substring(0, _encryptedFile.Name.Length - _encryptedFile.Extension.Length), i, _encryptedFile.Extension), newFile.Name);
-            }
-        }
+        //[Test]
+        //public void Encrypt_FileAlreadyExists_NewFileWithoutConflict()
+        //{
+        //    // arrange
+        //    var conflictFile = new FileInfo(TestDirectory + _originalFile.Name + Settings.Default.Extension);
+        //    // ReSharper disable once UnusedVariable
+        //    using (var fs = conflictFile.Create())
+        //    {
+        //        // action
+        //        _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
 
-        [Test]
-        public void Encrypt_SafelyDeleteOriginal_OriginalGone()
-        {
-            // arrange
+        //        // assert
+        //        Assert.IsTrue(File.Exists(_encryptedFile.FullName));
+        //        Assert.AreNotEqual(conflictFile.FullName, _encryptedFile.FullName);
+        //    }
+        //}
 
-            // action
-            _fileCryptographer.Encrypt(_originalFile, "", true);
+        //[Test]
+        //public void Encrypt_FileAlreadyExists_NewFileNamedCorrectly([Values(1, 10)]int attempts)
+        //{
+        //    // arrange 
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
 
-            // assertion
-            Assert.IsFalse(File.Exists(_originalFile.FullName));
-        }
+        //    // action
+        //    for (var i = 1; i < attempts; i++)
+        //    {
+        //        var newFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //        // assert
+        //        Assert.AreEqual(String.Format("{0} ({1}){2}", _encryptedFile.Name.Substring(0, _encryptedFile.Name.Length - _encryptedFile.Extension.Length), i, _encryptedFile.Extension), newFile.Name);
+        //    }
+        //}
 
-        [Test]
-        public void Encrypt_AnyStringKey_HasValidJsonHeader()
-        {
-            // arrange
+        //[Test]
+        //public void Encrypt_SafelyDeleteOriginal_OriginalGone()
+        //{
+        //    // arrange
 
-            // action
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //    // action
+        //    _fileCryptographer.Encrypt(_originalFile, "", true);
 
-            // assertion
-            Assert.IsTrue(File.Exists(_encryptedFile.FullName));
+        //    // assertion
+        //    Assert.IsFalse(File.Exists(_originalFile.FullName));
+        //}
 
-            object json;
-            using (var stream = _encryptedFile.OpenText())
-            {
-                var jsonSerializer = new JsonSerializer
-                {
-                    CheckAdditionalContent = false,
-                    MissingMemberHandling = MissingMemberHandling.Error
-                };
-                json = jsonSerializer.Deserialize(stream, typeof(EncryptionInfo));
-            }
+        //[Test]
+        //public void Encrypt_AnyStringKey_HasValidJsonHeader()
+        //{
+        //    // arrange
 
-            Assert.IsInstanceOf<EncryptionInfo>(json);
-        }
+        //    // action
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
 
-        [Test]
-        public void Encrypt_AnyStringKey_HasFilledInJsonHeader()
-        {
-            // arrange
-            _fileCryptographer.Encrypt(_originalFile, "");
+        //    // assertion
+        //    Assert.IsTrue(File.Exists(_encryptedFile.FullName));
 
-            // action
-            EncryptionInfo encryptInfo;
-            using (var stream = _encryptedFile.OpenText())
-            {
-                var jsonSerializer = new JsonSerializer
-                {
-                    CheckAdditionalContent = false,
-                    MissingMemberHandling = MissingMemberHandling.Error
-                };
-                encryptInfo = (EncryptionInfo)jsonSerializer.Deserialize(stream, typeof(EncryptionInfo));
-            }
+        //    object json;
+        //    using (var stream = _encryptedFile.OpenText())
+        //    {
+        //        var jsonSerializer = new JsonSerializer
+        //        {
+        //            CheckAdditionalContent = false,
+        //            MissingMemberHandling = MissingMemberHandling.Error
+        //        };
+        //        json = jsonSerializer.Deserialize(stream, typeof(EncryptionInfo));
+        //    }
 
-            // assertion
-            Assert.IsNotNull(encryptInfo.Version);
+        //    Assert.IsInstanceOf<EncryptionInfo>(json);
+        //}
 
-            Assert.IsNotNull(encryptInfo.SaltSize);
-            Assert.IsNotNull(encryptInfo.Salt);
-            Assert.IsTrue(encryptInfo.Salt.Length == encryptInfo.SaltSize / 8);
+        //[Test]
+        //public void Encrypt_AnyStringKey_HasFilledInJsonHeader()
+        //{
+        //    // arrange
+        //    _fileCryptographer.Encrypt(_originalFile, "");
 
-            Assert.IsNotNull(encryptInfo.HashAlgorithm);
-            var hA = Activator.CreateInstance(encryptInfo.HashAlgorithm) as HashAlgorithm;
-            Assert.IsInstanceOf<HashAlgorithm>(hA);
-            Assert.IsNotNull(encryptInfo.OriginalHash);
-            // Only *4 as the hashes are saved under a verboxe hexadecimal format
-            //  so one character is half a byte
-            // ReSharper disable once PossibleNullReferenceException
-            Assert.AreEqual(hA.HashSize, encryptInfo.OriginalHash.ToCharArray().Length * 4);
+        //    // action
+        //    EncryptionInfo encryptInfo;
+        //    using (var stream = _encryptedFile.OpenText())
+        //    {
+        //        var jsonSerializer = new JsonSerializer
+        //        {
+        //            CheckAdditionalContent = false,
+        //            MissingMemberHandling = MissingMemberHandling.Error
+        //        };
+        //        encryptInfo = (EncryptionInfo)jsonSerializer.Deserialize(stream, typeof(EncryptionInfo));
+        //    }
 
-            Assert.IsNotNull(encryptInfo.EncryptionAlgorithm);
-            var sA = Activator.CreateInstance(encryptInfo.EncryptionAlgorithm) as SymmetricAlgorithm;
-            Assert.IsInstanceOf<SymmetricAlgorithm>(sA);
-            Assert.IsNotNull(encryptInfo.KeySize);
-            // ReSharper disable once PossibleNullReferenceException
-            Assert.IsTrue(sA.ValidKeySize(encryptInfo.KeySize));
-            Assert.IsNotNull(encryptInfo.BlockSize);
-            Assert.IsNotNull(encryptInfo.Iv);
-            Assert.AreEqual(encryptInfo.BlockSize, encryptInfo.Iv.Length * 8);
-        }
+        //    // assertion
+        //    Assert.IsNotNull(encryptInfo.Version);
 
-        [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Decrypt_NullFile_ArgumentNullException()
-        {
-            // arrange
+        //    Assert.IsNotNull(encryptInfo.SaltSize);
+        //    Assert.IsNotNull(encryptInfo.Salt);
+        //    Assert.IsTrue(encryptInfo.Salt.Length == encryptInfo.SaltSize / 8);
 
-            // action
-            _fileCryptographer.Decrypt(null, "");
+        //    Assert.IsNotNull(encryptInfo.HashAlgorithm);
+        //    var hA = Activator.CreateInstance(encryptInfo.HashAlgorithm) as HashAlgorithm;
+        //    Assert.IsInstanceOf<HashAlgorithm>(hA);
+        //    Assert.IsNotNull(encryptInfo.OriginalHash);
+        //    // Only *4 as the hashes are saved under a verboxe hexadecimal format
+        //    //  so one character is half a byte
+        //    // ReSharper disable once PossibleNullReferenceException
+        //    Assert.AreEqual(hA.HashSize, encryptInfo.OriginalHash.ToCharArray().Length * 4);
 
-            // assertion
-        }
+        //    Assert.IsNotNull(encryptInfo.EncryptionAlgorithm);
+        //    var sA = Activator.CreateInstance(encryptInfo.EncryptionAlgorithm) as SymmetricAlgorithm;
+        //    Assert.IsInstanceOf<SymmetricAlgorithm>(sA);
+        //    Assert.IsNotNull(encryptInfo.KeySize);
+        //    // ReSharper disable once PossibleNullReferenceException
+        //    Assert.IsTrue(sA.ValidKeySize(encryptInfo.KeySize));
+        //    Assert.IsNotNull(encryptInfo.BlockSize);
+        //    Assert.IsNotNull(encryptInfo.Iv);
+        //    Assert.AreEqual(encryptInfo.BlockSize, encryptInfo.Iv.Length * 8);
+        //}
 
-        [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Decrypt_NullKey_ArgumentNullException()
-        {
-            // arrange
-            _fileCryptographer.Encrypt(_originalFile, "");
-            // action
-            _fileCryptographer.Decrypt(_originalFile, null);
+        //[Test]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public void Decrypt_NullFile_ArgumentNullException()
+        //{
+        //    // arrange
 
-            // assertion
-        }
+        //    // action
+        //    _fileCryptographer.Decrypt(null, "");
 
-        [Test]
-        [ExpectedException(typeof(FileNotFoundException))]
-        public void Decrypt_NonExistingFile_FileNotFoundException()
-        {
-            // arrange
+        //    // assertion
+        //}
 
-            // action
-            _fileCryptographer.Decrypt(new FileInfo(TestDirectory + "fakeFile"), "");
+        //[Test]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public void Decrypt_NullKey_ArgumentNullException()
+        //{
+        //    // arrange
+        //    _fileCryptographer.Encrypt(_originalFile, "");
+        //    // action
+        //    _fileCryptographer.Decrypt(_originalFile, null);
 
-            // assertion
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        [ExpectedException(typeof(IOException))]
-        public void Decrypt_UnavailableFile_IOException()
-        {
-            // arrange
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //[Test]
+        //[ExpectedException(typeof(FileNotFoundException))]
+        //public void Decrypt_NonExistingFile_FileNotFoundException()
+        //{
+        //    // arrange
 
-            // ReSharper disable once UnusedVariable
-            using (var fs = _encryptedFile.Open(FileMode.Open, FileAccess.ReadWrite))
-            {
-                // action
-                _fileCryptographer.Decrypt(_encryptedFile, "");
-            }
+        //    // action
+        //    _fileCryptographer.Decrypt(new FileInfo(TestDirectory + "fakeFile"), "");
 
-            // assertion
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        [ExpectedException(typeof(CryptographicException))]
-        public void Decrypt_DifferentKeys_CryptographicException([Values("", "A")] string encryptKey,
-            [Values(" ", "B")] string decryptKey)
-        {
-            // arrange
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, encryptKey);
-            // Assert.IsFalse(_key == _fc.HashedKey);
+        //[Test]
+        //[ExpectedException(typeof(IOException))]
+        //public void Decrypt_UnavailableFile_IOException()
+        //{
+        //    // arrange
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
 
-            // action
-            _fileCryptographer.Decrypt(_encryptedFile, decryptKey);
+        //    // ReSharper disable once UnusedVariable
+        //    using (var fs = _encryptedFile.Open(FileMode.Open, FileAccess.ReadWrite))
+        //    {
+        //        // action
+        //        _fileCryptographer.Decrypt(_encryptedFile, "");
+        //    }
 
-            // assertion
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        public void Decrypt_ValidKey_GetSameFile(
-            [Values("", "password", "a really long password that has the intent of beating any key size")] string key)
-        {
-            // arrange
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, key);
+        //[Test]
+        //[ExpectedException(typeof(CryptographicException))]
+        //public void Decrypt_DifferentKeys_CryptographicException([Values("", "A")] string encryptKey,
+        //    [Values(" ", "B")] string decryptKey)
+        //{
+        //    // arrange
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, encryptKey);
+        //    // Assert.IsFalse(_key == _fc.HashedKey);
 
-            // action
-            _decryptedFile = _fileCryptographer.Decrypt(_encryptedFile, key);
+        //    // action
+        //    _fileCryptographer.Decrypt(_encryptedFile, decryptKey);
 
-            // assertion
-            FileAssert.AreEqual(_originalFile, _decryptedFile as FileInfo); // hah lol
-        }
+        //    // assertion
+        //}
 
-        [Test]
-        [ExpectedException(typeof(FileNotFoundException))]
-        public void Encrypt_IsDirectory_FileNotFoundException()
-        {
-            // arrange
-            var newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");
-            _originalFile = new FileInfo(newDirectory.FullName);
+        //[Test]
+        //public void Decrypt_ValidKey_GetSameFile(
+        //    [Values("", "password", "a really long password that has the intent of beating any key size")] string key)
+        //{
+        //    // arrange
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, key);
 
-            // action
-            _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+        //    // action
+        //    _decryptedFile = _fileCryptographer.Decrypt(_encryptedFile, key);
 
-            // assertion
-        }
+        //    // assertion
+        //    FileAssert.AreEqual(_originalFile, _decryptedFile as FileInfo); // hah lol
+        //}
+
+        //[Test]
+        //[ExpectedException(typeof(FileNotFoundException))]
+        //public void Encrypt_IsDirectory_FileNotFoundException()
+        //{
+        //    // arrange
+        //    var newDirectory = Directory.CreateDirectory(TestDirectory + "/folderTest");
+        //    _originalFile = new FileInfo(newDirectory.FullName);
+
+        //    // action
+        //    _encryptedFile = _fileCryptographer.Encrypt(_originalFile, "");
+
+        //    // assertion
+        //}
     }
 
 
